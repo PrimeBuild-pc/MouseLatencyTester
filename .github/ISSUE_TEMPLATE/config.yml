@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/PrimeBuild-pc/MouseLatencyTester/security/advisories/new
+    about: Report privately. Please do not open a public issue.
+  - name: Hardware and wiring questions
+    url: https://github.com/PrimeBuild-pc/MouseLatencyTester/blob/main/docs/wiring.md
+    about: Bring-up order, expected values and electrical notes.

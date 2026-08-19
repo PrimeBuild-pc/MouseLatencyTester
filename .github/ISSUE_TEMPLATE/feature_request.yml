@@ -1,0 +1,48 @@
+name: Feature request
+description: Suggest an improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Changes to the measurement pipeline need evidence — see
+        [CONTRIBUTING.md](../../blob/main/CONTRIBUTING.md).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation, not the solution you already have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Dashboard / UI
+        - Statistics or charts
+        - Archive / database
+        - Translations
+        - Firmware
+        - Packaging / installer
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: timing
+    attributes:
+      label: Timing impact
+      options:
+        - label: This does not change the measurement pipeline, or I have before/after numbers.
+          required: true

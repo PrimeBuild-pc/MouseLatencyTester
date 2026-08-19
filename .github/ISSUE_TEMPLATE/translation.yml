@@ -1,0 +1,34 @@
+name: Translation
+description: Add a language, or fix wording in an existing one
+labels: ["translation", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Translations live in `latency_tester/locales/*.json` and need no Python.
+        See the "Adding a language" section of
+        [CONTRIBUTING.md](../../blob/main/CONTRIBUTING.md).
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "Português (pt)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this?
+      options:
+        - A new language
+        - A correction to an existing language
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: For a correction, give the key and the suggested wording.

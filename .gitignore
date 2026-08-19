@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tests / tooling
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Local data — never commit measurements or user settings
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+settings.json
+*.csv
+!docs/**/*.csv
+
+# Arduino build output
+build*/
+*.hex
+*.elf

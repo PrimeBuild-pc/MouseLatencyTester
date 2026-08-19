@@ -1,0 +1,4 @@
+# Runtime dependencies for the Latency Tester dashboard.
+pyserial>=3.5      # Teensy COM port
+pynput>=1.7.6      # OS-level click detection (the t1 side of the measurement)
+matplotlib>=3.7    # comparison charts; the app runs without it, tables only

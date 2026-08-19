@@ -1,0 +1,75 @@
+name: Bug report
+description: Something in the dashboard or the firmware misbehaves
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems do **not** go here — use
+        [private reporting](../../security/advisories/new) instead.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect the Teensy
+        2. Press Calibrate
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: demo
+    attributes:
+      label: Does it reproduce in demo mode?
+      description: Settings → Demo mode → Start demo device. This tells us instantly whether hardware is involved.
+      options:
+        - "Yes, it happens in demo mode too"
+        - "No, only with real hardware"
+        - "Not applicable"
+    validations:
+      required: true
+
+  - type: input
+    id: app_version
+    attributes:
+      label: App version
+      description: Shown in the window title and under Settings → About.
+      placeholder: "3.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      description: Shown in the connection bar.
+      placeholder: "v1.4"
+
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 23H2"
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Event log
+      description: Paste the relevant lines from the Events panel. Protocol tokens are the useful part.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: A CSV export of the affected run helps more than a screenshot.

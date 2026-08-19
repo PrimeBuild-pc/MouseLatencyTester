@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "latency-tester"
+version = "3.0.0"
+description = "Microsecond mouse click latency benchmarking with a Teensy 2.0 probe"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["latency", "mouse", "benchmark", "teensy", "input-lag"]
+classifiers = [
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Benchmark",
+    "Topic :: System :: Hardware",
+]
+dependencies = [
+    "pyserial>=3.5",
+    "pynput>=1.7.6",
+    "matplotlib>=3.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.gui-scripts]
+latency-tester = "latency_tester.app:main"
+
+[tool.setuptools]
+packages = ["latency_tester", "latency_tester.views"]
+
+[tool.setuptools.package-data]
+latency_tester = ["locales/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

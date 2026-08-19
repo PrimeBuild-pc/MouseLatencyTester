@@ -1,0 +1,27 @@
+# Normalise on commit, check out native by default.
+* text=auto
+
+# Source stays LF so diffs are stable across platforms.
+*.py     text eol=lf
+*.ino    text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.yml    text eol=lf
+*.toml   text eol=lf
+*.spec   text eol=lf
+
+# Windows tooling needs CRLF.
+*.ps1    text eol=crlf
+*.iss    text eol=crlf
+*.bat    text eol=crlf
+
+# Binaries.
+*.ico    binary
+*.png    binary
+*.jpg    binary
+*.db     binary
+
+# Keep GitHub's language stats about the project, not its history.
+legacy/**   linguist-vendored
+companion/** linguist-vendored
