@@ -9,7 +9,7 @@
 
 #define AppName        "Latency Tester"
 #ifndef AppVersion
-  #define AppVersion   "1.0.0"
+  #define AppVersion   "1.1.0"
 #endif
 #define AppPublisher   "PrimeBuild"
 #define AppURL         "https://github.com/PrimeBuild-pc/MouseLatencyTester"

@@ -5,8 +5,11 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+import queue
+import threading
 from typing import TYPE_CHECKING
 
+from .. import devices as hardware
 from ..constants import CONNECTION_MODES, POLLING_RATES
 from ..i18n import translator as tr
 from ..protocol import CMD_LIGHT, CMD_STATS
@@ -16,6 +19,9 @@ from ..widgets import (SampleChart, attach_tooltip, form_row, info_row,
 
 if TYPE_CHECKING:
     from ..app import LatencyTesterApp
+
+#: How long the report-rate measurement samples for.
+RATE_SECONDS = 2.0
 
 METRICS = (
     ("mean", "live.mean"), ("median", "live.median"), ("p95", "live.p95"),
@@ -30,6 +36,8 @@ class LiveView(ttk.Frame):
         super().__init__(parent, padding=10)
         self.app = app
         palette = app.palette
+        self._rate_queue: queue.Queue = queue.Queue()
+        self._rate_busy = False
 
         self.columnconfigure(0, weight=3, minsize=520)
         self.columnconfigure(1, weight=2, minsize=380)
@@ -95,14 +103,25 @@ class LiveView(ttk.Frame):
         form_row(box, 0, tr("live.device"), self.device_combo)
         form_row(box, 1, tr("live.run_name"),
                  ttk.Entry(box, textvariable=self.app.run_name_var))
-        form_row(box, 2, tr("live.polling"),
-                 ttk.Combobox(box, textvariable=self.app.polling_var,
-                              values=POLLING_RATES),
-                 tr("tip.polling"), palette)
+        # Polling rate gets a Measure button: the value is otherwise a claim,
+        # and this project measures rather than assumes.
+        polling = ttk.Frame(box)
+        polling.columnconfigure(0, weight=1)
+        rate_combo = ttk.Combobox(polling, textvariable=self.app.polling_var,
+                                  values=POLLING_RATES)
+        rate_combo.grid(row=0, column=0, sticky="ew")
+        self.measure_btn = ttk.Button(polling, text=tr("live.measure_rate"),
+                                      width=10, command=self.measure_rate)
+        self.measure_btn.grid(row=0, column=1, padx=(6, 0))
+        attach_tooltip(self.measure_btn, tr("tip.measure_rate"), palette)
+        form_row(box, 2, tr("live.polling"), polling, tr("tip.polling"), palette)
+
         form_row(box, 3, tr("live.connection_mode"),
                  ttk.Combobox(box, textvariable=self.app.mode_var,
                               values=CONNECTION_MODES))
-        form_row(box, 4, tr("live.dpi"), ttk.Entry(box, textvariable=self.app.dpi_var))
+        form_row(box, 4, tr("live.dpi"),
+                 ttk.Entry(box, textvariable=self.app.dpi_var),
+                 tr("tip.dpi"), palette)
         form_row(box, 5, tr("live.mouse_firmware"),
                  ttk.Entry(box, textvariable=self.app.mouse_fw_var))
         form_row(box, 6, tr("live.debounce"),
@@ -113,6 +132,11 @@ class LiveView(ttk.Frame):
                              background=palette.surface_alt, foreground=palette.fg,
                              insertbackground=palette.fg, font=(FONT_FAMILY, 9))
         self.notes.grid(row=7, column=1, sticky="ew", pady=4)
+
+        self.rate_status = tk.StringVar(value="")
+        ttk.Label(box, textvariable=self.rate_status, wraplength=360,
+                  justify="left", style="Muted.TLabel").grid(
+            row=9, column=0, columnspan=2, sticky="ew", pady=(6, 0))
 
         options = ttk.Frame(box)
         options.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(10, 0))
@@ -200,6 +224,54 @@ class LiveView(ttk.Frame):
         self.log_text.configure(yscrollcommand=scroll.set)
         self.log_text.pack(side="left", fill="both", expand=True)
         scroll.pack(side="right", fill="y")
+
+    # ---------------------------------------------------- polling rate ------
+    def measure_rate(self) -> None:
+        """Measure the mouse's real report rate on a worker thread."""
+        if not hardware.IS_WINDOWS:
+            self.rate_status.set(tr("live.rate_unavailable"))
+            return
+        # Never while a measurement is running: this pulls raw input and would
+        # add work next to the timing path.
+        if self.app.test_mode:
+            self.rate_status.set(tr("live.rate_busy"))
+            return
+        if self._rate_busy:
+            return
+
+        self._rate_busy = True
+        self.measure_btn.configure(state="disabled")
+        self.rate_status.set(tr("live.measuring"))
+
+        def work() -> None:
+            result = hardware.measure_report_rate(seconds=RATE_SECONDS)
+            self._rate_queue.put(result)
+
+        threading.Thread(target=work, name="poll-rate", daemon=True).start()
+        self.after(150, self._drain_rate)
+
+    def _drain_rate(self) -> None:
+        try:
+            result = self._rate_queue.get_nowait()
+        except queue.Empty:
+            if self._rate_busy:
+                self.after(150, self._drain_rate)
+            return
+
+        self._rate_busy = False
+        try:
+            self.measure_btn.configure(state="normal")
+            if result is None:
+                self.rate_status.set(tr("live.rate_failed"))
+                return
+            # Fill the field with the nominal rate, but report what was
+            # actually counted so the user can judge it.
+            self.app.polling_var.set(str(result.nominal))
+            self.rate_status.set(tr("live.rate_measured",
+                                    hertz=f"{result.hertz:.0f}",
+                                    reports=result.reports))
+        except tk.TclError:
+            pass
 
     # ------------------------------------------------------------------ API --
     def set_device_choices(self, names: list[str]) -> None:

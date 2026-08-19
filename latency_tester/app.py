@@ -65,6 +65,7 @@ class LatencyTesterApp:
         self._build_vars()
         self._build_shell()
 
+        self.auto_select_device()
         self.refresh_ports(auto_connect=bool(self.settings.get("auto_connect")))
         # Tracked so shutdown can cancel them; a callback firing after the
         # interpreter is gone raises "invalid command name" out of Tk itself.
@@ -542,6 +543,23 @@ class LatencyTesterApp:
             self.device_var.set(names[0])
 
         self.devices_view.reload(devices)
+
+    def auto_select_device(self) -> None:
+        """Pick the profile saved for the mouse that is physically connected.
+
+        Only ever *selects* an existing profile; it never creates or edits one.
+        """
+        try:
+            from . import devices as hardware
+
+            for mouse in hardware.detect_mice():
+                row = self.db.find_device_by_hardware_id(mouse.hardware_id)
+                if row is not None:
+                    self.device_var.set(row["name"])
+                    self.log(tr("devices.matched", name=row["name"]))
+                    return
+        except Exception:
+            log.debug("device auto-selection failed", exc_info=True)
 
     def refresh_sessions(self) -> None:
         self.sessions_view.reload()

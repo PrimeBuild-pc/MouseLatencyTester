@@ -11,7 +11,7 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/tests.yml?branch=main&style=flat-square&logo=github&label=tests)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/codeql.yml?branch=main&style=flat-square&logo=github&label=CodeQL)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml)
 [![Coverage](https://img.shields.io/badge/core%20coverage-87%25-4ade80?style=flat-square)](#development)
-[![Tests count](https://img.shields.io/badge/tests-217-4ade80?style=flat-square)](tests)
+[![Tests count](https://img.shields.io/badge/tests-246-4ade80?style=flat-square)](tests)
 [![Licence](https://img.shields.io/github/license/PrimeBuild-pc/MouseLatencyTester?style=flat-square&color=fbbf24)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-5b9cff?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-5b9cff?style=flat-square&logo=windows&logoColor=white)](docs/installation_windows.md)
@@ -222,7 +222,8 @@ Switch under *Settings → Language*; the choice persists. Adding another is a s
 
 #### 📊 Live test
 Mean, median, min, max, std dev, P5/P95/P99, IQR, MAD and jitter (P95−P5).
-Live chart with outliers ringed, plus `BTN1`/`BTN2` counters.
+Live chart with outliers ringed, `BTN1`/`BTN2` counters, and a **Measure**
+button for the real polling rate.
 
 </td>
 <td width="33%" valign="top">
@@ -245,7 +246,8 @@ Raw samples, box plot, ECDF or histogram. Selectable **baseline** with
 
 #### 🖱 Devices
 One profile per mouse: manufacturer, model, serial, switch type, usual
-firmware, notes.
+firmware, notes. **Detects the connected mouse** and reconnects it to its
+saved profile automatically.
 
 </td>
 <td valign="top">
@@ -269,6 +271,23 @@ the display never disturbs the timing.
 > **Raw data is never discarded.** Outliers are detected with the Tukey fence and **marked**, not
 > removed. They stay in the database, in the CSV export and in every statistic. Deciding what an
 > outlier means is the operator's job, not the software's.
+
+### Knowing your mouse
+
+**Name** — *Devices → Detect connected mouse* reads the USB descriptor and fills in the name,
+manufacturer and serial. That name is often the internal or dongle name rather than the marketing
+one (an ATK F1 reports as `Compx Wireless mouse 8k dongle-L`), so **rename it to whatever you
+like** — the profile is linked to the device by its `VID:PID` hardware ID, not by its name. Once
+linked, plugging that mouse in selects its profile automatically.
+
+**Polling rate** — *Live test → Measure* counts the mouse's actual Raw Input reports for two
+seconds while you move it, and fills the field with the nearest standard rate while reporting what
+was really counted. It measures what the mouse **achieves**, which is not always what it is
+configured for. If you do not move enough, it says so rather than guessing.
+
+**DPI** — not detectable, and not faked. No Windows API exposes it: DPI lives inside the mouse and
+vendor software reads it over undocumented, per-manufacturer HID reports. Type it in from your
+mouse's own software.
 
 ### A typical session
 
@@ -517,6 +536,7 @@ latency_tester/          the dashboard, as a package
   stats.py               percentiles, MAD, outliers, deltas  (pure functions)
   database.py            SQLite archive + schema migrations
   serial_service.py      reader thread, TRIG/click association
+  devices.py             mouse identification + report-rate measurement
   updater.py             checksum-verified one-click update
   demo.py                simulated Teensy
   settings.py            persisted preferences
@@ -543,14 +563,14 @@ pip install -r requirements-dev.txt
 python -m pytest tests -q
 ```
 
-**217 tests**, **87% coverage of the non-GUI code** — the GUI is deliberately excluded rather than
+**246 tests**, **87% coverage of the non-GUI code** — the GUI is deliberately excluded rather than
 padded with tests that assert nothing. CI enforces the coverage floor, so the badge cannot drift
 down silently.
 
 Covered: protocol parsing including the button tokens, the firmware button-debounce rules,
-statistics and percentiles, the database and its migration from the older schema, run
-save/load/duplicate, CSV export, settings, every locale, the updater's checksum verification and
-host allow-listing, the TRIG↔click association, and the demo device.
+statistics and percentiles, the database and its migrations, run save/load/duplicate, CSV export,
+settings, every locale, the updater's checksum verification and host allow-listing, mouse naming
+rules and the polling-rate formula, the TRIG↔click association, and the demo device.
 
 `tests/test_button_debounce.py` mirrors `serviceButtons()` / `flushButtonEvents()` from the v1.4
 sketch line for line, so the bench acceptance rules are checked in CI. It is a **mirror, not an

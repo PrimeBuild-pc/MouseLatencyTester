@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Sequence
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # The v0 schema exactly as dashboard v2 created it.  Applied with IF NOT EXISTS
 # so an existing archive is left untouched and a fresh one starts from the same
@@ -71,10 +71,16 @@ _MIGRATIONS: list[list[str]] = [
         "ALTER TABLE runs ADD COLUMN teensy_firmware TEXT NOT NULL DEFAULT ''",
         "ALTER TABLE runs ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0",
     ],
+    # -> 2 : remember which physical mouse a profile belongs to, so the app can
+    #        reselect it automatically. "VID:PID", e.g. "373B:11D9".
+    [
+        "ALTER TABLE devices ADD COLUMN hardware_id TEXT NOT NULL DEFAULT ''",
+    ],
 ]
 
 DEVICE_FIELDS = ("name", "manufacturer", "model", "notes",
-                 "serial_number", "switch_type", "default_firmware")
+                 "serial_number", "switch_type", "default_firmware",
+                 "hardware_id")
 
 RUN_FIELDS = ("name", "polling_rate_hz", "connection_mode", "mouse_firmware",
               "notes", "target_samples", "calibration_us", "light_start",
@@ -167,6 +173,15 @@ class LatencyDB:
     def get_device(self, device_id: int) -> sqlite3.Row | None:
         return self.conn.execute(
             "SELECT * FROM devices WHERE id=?", (int(device_id),)).fetchone()
+
+    def find_device_by_hardware_id(self, hardware_id: str) -> sqlite3.Row | None:
+        """The profile saved for a physically connected mouse, if any."""
+        hardware_id = (hardware_id or "").strip()
+        if not hardware_id:
+            return None
+        return self.conn.execute(
+            "SELECT * FROM devices WHERE hardware_id=? COLLATE NOCASE "
+            "ORDER BY id LIMIT 1", (hardware_id,)).fetchone()
 
     # ---------------------------------------------------------------- runs --
     def save_run(self, metadata: dict, samples: Sequence[dict]) -> int:

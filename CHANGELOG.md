@@ -4,6 +4,50 @@ All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/);
 versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-08-19
+
+### Added — knowing which mouse is plugged in
+
+- **Mouse detection.** *Devices → Detect connected mouse* reads the USB string
+  descriptors (`HidD_GetProductString` and friends) and fills in the profile
+  name, manufacturer and serial. The Windows registry only ever reports the
+  generic INF name "HID-compliant mouse", which is why the descriptors are read
+  directly. When more than one device exposes a mouse collection — a keyboard
+  with mouse emulation, for instance — a picker appears instead of guessing.
+- **Profiles remember their hardware.** Schema v2 adds `devices.hardware_id`
+  (`VID:PID`). Plugging a known mouse in selects its profile automatically at
+  startup. The name is yours to change; the hardware ID is what does the
+  matching.
+- **Polling rate measurement.** *Live test → Measure* counts Raw Input movement
+  reports for two seconds and fills the field with the nearest standard rate,
+  while reporting the figure actually counted. It measures what the mouse
+  achieves rather than what it is configured for, and refuses to produce a
+  number when there was not enough movement. Blocked during test mode so it can
+  never run next to the timing path.
+
+### Not detectable, and not faked
+
+- **DPI.** No Windows API exposes it: it lives inside the mouse and vendor
+  software reads it over undocumented, per-manufacturer HID reports. The field
+  stays manual, with a tooltip saying why. A guessed DPI in a benchmark's
+  metadata is worse than a blank one.
+
+### Fixed
+
+- Every Win32 call in the new module declares its `restype`/`argtypes`.
+  Without that, ctypes truncates 64-bit handles on x64 — a truncated
+  `GetModuleHandleW` result made `RegisterClassW` fault with an access
+  violation, which would have crashed the app.
+
+### Quality
+
+- 246 tests. The polling-rate formula is tested against steady streams from
+  125 Hz to 8 kHz, against pauses in the movement, and against batched delivery
+  — the counter was validated separately with synthetic input at known rates,
+  where it matched to within 0.1% up to 4 kHz.
+
+---
+
 ## [1.0.0] — 2026-08-19
 
 **First public release.**
