@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from tkinter import ttk
 from typing import Sequence
 
 from .stats import compute_stats, fmt_ms, outlier_indices
 from .theme import FONT_FAMILY, Palette
+
+
+log = logging.getLogger(__name__)
 
 
 class Tooltip:
@@ -34,7 +38,7 @@ class Tooltip:
             try:
                 self.widget.after_cancel(self._after_id)
             except tk.TclError:
-                pass
+                log.debug("tooltip timer was already gone")
             self._after_id = None
 
     def _show(self) -> None:
@@ -63,7 +67,7 @@ class Tooltip:
             try:
                 self._window.destroy()
             except tk.TclError:
-                pass
+                log.debug("tooltip window was already destroyed")
             self._window = None
 
 

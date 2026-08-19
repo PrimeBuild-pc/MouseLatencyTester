@@ -7,6 +7,7 @@ issues serial commands and never blocks, so it cannot influence timing.
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
@@ -16,6 +17,9 @@ from ..theme import FONT_FAMILY
 
 if TYPE_CHECKING:
     from ..app import LatencyTesterApp
+
+
+log = logging.getLogger(__name__)
 
 
 class TestModeOverlay:
@@ -115,7 +119,7 @@ class TestModeOverlay:
             self.state.configure(text=state)
             self.hint.configure(text=hint)
         except tk.TclError:
-            pass
+            log.debug("overlay recolour skipped: the window is already gone")
 
     def refresh(self) -> None:
         """Repaint the numbers.  Called from the app's event pump."""
@@ -128,10 +132,10 @@ class TestModeOverlay:
             self.count.configure(
                 text=f"N {self.app.test_sample_count()} / {self.target}")
         except tk.TclError:
-            pass
+            log.debug("overlay refresh skipped: the window is already gone")
 
     def close(self) -> None:
         try:
             self.window.destroy()
         except tk.TclError:
-            pass
+            log.debug("overlay was already destroyed")

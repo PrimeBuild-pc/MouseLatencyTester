@@ -13,7 +13,7 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
 
-from . import (SUPPORTED_FIRMWARE, __version__, database, export, protocol,
+from . import (SUPPORTED_FIRMWARE, __version__, export, protocol,
                serial_service, theme)
 from .database import LatencyDB
 from .demo import PORT_NAME as DEMO_PORT
@@ -746,7 +746,7 @@ class LatencyTesterApp:
             try:
                 self.root.after_cancel(timer_id)
             except tk.TclError:
-                pass
+                log.debug("timer %s was already gone", timer_id)
         self._timers.clear()
         if self.test_mode:
             self.exit_test_mode()
@@ -754,7 +754,7 @@ class LatencyTesterApp:
         try:
             self.settings.set("window_geometry", self.root.winfo_geometry())
         except tk.TclError:
-            pass
+            log.debug("no geometry to save; the window is already gone")
         self.remember_last_run_settings()
 
         self.disconnect()

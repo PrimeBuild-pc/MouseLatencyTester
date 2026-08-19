@@ -1,0 +1,18 @@
+name: "MouseLatencyTester CodeQL config"
+
+# The security-and-quality suite is deliberate: this project would rather see
+# maintainability findings than only vulnerabilities.
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  # Frozen reference implementations. legacy/ holds the single-file dashboards
+  # this project was refactored from and companion/ the original command-line
+  # tool; both are kept byte-for-byte as the historical record of a verified
+  # measurement pipeline. They are never edited, so scanning them only produces
+  # findings that can never be actioned.
+  - legacy
+  - companion
+
+  # Build output, never shipped as source.
+  - build

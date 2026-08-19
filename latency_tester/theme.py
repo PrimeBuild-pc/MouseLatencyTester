@@ -6,10 +6,13 @@ there is no reason to pull in a theming dependency.
 
 from __future__ import annotations
 
+import logging
 import sys
 import tkinter as tk
 from dataclasses import dataclass
 from tkinter import ttk
+
+log = logging.getLogger(__name__)
 
 THEMES = ("system", "light", "dark")
 
@@ -130,7 +133,9 @@ def apply(root: tk.Misc, palette: Palette) -> None:
     try:
         style.theme_use("clam")
     except tk.TclError:
-        pass
+        # Every ttk build ships clam, but fall back to the default rather than
+        # refusing to start.
+        log.debug("the clam theme is unavailable; using the default")
 
     p = palette
     base_font = (FONT_FAMILY, 10)
@@ -153,7 +158,7 @@ def apply(root: tk.Misc, palette: Palette) -> None:
     try:
         root.configure(background=p.bg)
     except tk.TclError:
-        pass
+        log.debug("could not set the root background")
 
     style.configure(".", background=p.bg, foreground=p.fg,
                     fieldbackground=p.surface_alt, bordercolor=p.border,

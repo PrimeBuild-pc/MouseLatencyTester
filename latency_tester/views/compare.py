@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from typing import TYPE_CHECKING
@@ -265,8 +266,11 @@ class CompareView(ttk.Frame):
             cells = [label]
             for key in ("median", "mean", "p95", "p99"):
                 absolute, percent = delta(stats[key], base_stats[key])
-                cells.append(f"{fmt_delta(absolute)} ms ({percent:+.1f}%)"
-                             if percent == percent else f"{fmt_delta(absolute)} ms")
+                # A zero baseline makes the percentage undefined; show the
+                # absolute difference alone rather than "nan%".
+                cells.append(f"{fmt_delta(absolute)} ms"
+                             if math.isnan(percent)
+                             else f"{fmt_delta(absolute)} ms ({percent:+.1f}%)")
             self.delta_tree.insert("", "end", values=cells)
 
     def _chart_key(self) -> str:

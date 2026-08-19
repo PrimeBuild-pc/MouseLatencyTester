@@ -1,5 +1,6 @@
 """The demo device must speak the real protocol and never fake a measurement."""
 
+import queue
 import time
 
 from latency_tester import protocol
@@ -13,8 +14,8 @@ def collect(service, seconds):
     while time.time() < deadline:
         try:
             events.append(service.events.get(timeout=0.05))
-        except Exception:
-            pass
+        except queue.Empty:
+            continue
     return events
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+import logging
 import queue
 import threading
 from typing import TYPE_CHECKING
@@ -19,6 +20,8 @@ from ..widgets import (SampleChart, attach_tooltip, form_row, info_row,
 
 if TYPE_CHECKING:
     from ..app import LatencyTesterApp
+
+log = logging.getLogger(__name__)
 
 #: How long the report-rate measurement samples for.
 RATE_SECONDS = 2.0
@@ -271,7 +274,7 @@ class LiveView(ttk.Frame):
                                     hertz=f"{result.hertz:.0f}",
                                     reports=result.reports))
         except tk.TclError:
-            pass
+            log.debug("rate result dropped: the view is already gone")
 
     # ------------------------------------------------------------------ API --
     def set_device_choices(self, names: list[str]) -> None:
