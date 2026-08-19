@@ -37,32 +37,43 @@ class TestModeOverlay:
         self.frame = frame
         frame.pack(fill="both", expand=True)
 
+        # Everything lives in a block centred on the screen: at 1440p a
+        # top-aligned layout leaves most of the display empty, and the point of
+        # this screen is to be readable at a glance from a normal seating
+        # distance.
+        inner = tk.Frame(frame)
+        self.inner = inner
+        inner.place(relx=0.5, rely=0.5, anchor="center")
+
         device = self.app.device_var.get().strip() or "—"
         run_name = self.app.run_name_var.get().strip()
         polling = self.app.polling_var.get().strip()
-        header = " — ".join(x for x in (device, run_name,
-                                        f"{polling} Hz" if polling else "") if x)
+        parts = [device, run_name]
+        # Do not repeat the rate when the run name already carries it.
+        if polling and f"{polling} Hz" not in run_name:
+            parts.append(f"{polling} Hz")
+        header = " — ".join(x for x in parts if x)
 
         self.labels: list[tk.Label] = []
-        self._label(frame, header, 20, "bold", pady=(50, 4))
+        self._label(inner, header, 22, "bold", pady=(0, 6))
         if self.app.is_demo:
-            self._label(frame, tr("app.demo_banner"), 13, "bold", pady=(0, 4))
-        self._label(frame, tr("test.title"), 28, "bold", pady=(0, 10))
+            self._label(inner, tr("app.demo_banner"), 13, "bold", pady=(0, 6))
+        self._label(inner, tr("test.title"), 30, "bold", pady=(0, 14))
 
-        self.hint = self._label(frame, tr("test.wait_hint"), 17, "bold", pady=(6, 0))
-        self.state = self._label(frame, tr("test.preparing"), 22, "bold", pady=(30, 4))
+        self.hint = self._label(inner, tr("test.wait_hint"), 18, "bold", pady=(0, 0))
+        self.state = self._label(inner, tr("test.preparing"), 24, "bold", pady=(28, 6))
 
-        self.value = self._label(frame, "—", 80, "bold")
-        self._label(frame, "ms", 18, "normal")
+        self.value = self._label(inner, "—", 96, "bold")
+        self._label(inner, "ms", 20, "normal")
 
-        row = tk.Frame(frame)
+        row = tk.Frame(inner)
         self.frame_children_rows = [row]
-        row.pack(pady=26)
-        self.median = self._label(row, f"{tr('test.median')} —", 17, "bold", side="left")
-        self.p95 = self._label(row, f"{tr('test.p95')} —", 17, "bold", side="left")
-        self.count = self._label(row, f"N 0 / {target}", 17, "bold", side="left")
+        row.pack(pady=30)
+        self.median = self._label(row, f"{tr('test.median')} —", 18, "bold", side="left")
+        self.p95 = self._label(row, f"{tr('test.p95')} —", 18, "bold", side="left")
+        self.count = self._label(row, f"N 0 / {target}", 18, "bold", side="left")
 
-        self._label(frame, tr("test.exit"), 11, "normal", pady=8)
+        self._label(inner, tr("test.exit"), 12, "normal", pady=(10, 0))
 
         self.set_mode("wait")
         window.focus_force()
@@ -96,6 +107,7 @@ class TestModeOverlay:
 
         try:
             self.frame.configure(background=background)
+            self.inner.configure(background=background)
             for row in self.frame_children_rows:
                 row.configure(background=background)
             for label in self.labels:

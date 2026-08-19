@@ -197,5 +197,22 @@
   "tip.demo": "模拟数据，绝不会与真实测试混合。",
   "tip.light": "KY-018 遥测数据，与测试一同保存。它不属于测量的一部分。",
   "tip.polling": "仅记录在档案库中，不会改变 Teensy 的测量方式。",
-  "tip.target": "采集到这么多样本后，测试模式会变为蓝色。"
+  "tip.target": "采集到这么多样本后，测试模式会变为蓝色。",
+  "update.available": "有新版本 {version} 可用（{size} MB）。",
+  "update.check": "检查更新",
+  "update.checking": "正在检查…",
+  "update.confirm": "将下载版本 {version}（{size} MB），使用已发布的 SHA-256 校验后安装。\n\n应用会关闭，以便安装程序替换文件。未保存的样本将会丢失。\n\n是否继续？",
+  "update.confirm_title": "安装更新",
+  "update.current": "已安装版本：{version}",
+  "update.downloading": "正在下载… {percent}%",
+  "update.failed": "更新失败：{error}",
+  "update.hint": "更新只会从本项目的官方 GitHub 发布页下载，并在运行前使用已发布的 SHA-256 进行校验。",
+  "update.install": "下载并安装 {version}",
+  "update.open_page": "打开发布页面",
+  "update.source_note": "正在以源码方式运行：不会自动安装更新，请改用 git pull 更新仓库。",
+  "update.title": "更新",
+  "update.unsaved": "当前测试有未保存的样本。请先保存或丢弃，然后再更新。",
+  "update.up_to_date": "你使用的已是最新版本。",
+  "update.verified": "校验和已通过。安装程序即将启动，应用将会关闭。",
+  "update.verifying": "正在校验下载的文件…"
 }

@@ -1,41 +1,147 @@
-# Latency Tester
+<div align="center">
 
-Microsecond-accurate mouse click latency measurement with a Teensy 2.0, plus a
-desktop dashboard for running, archiving and comparing benchmarks.
+<img src="docs/images/banner.png" alt="MouseLatencyTester" width="100%">
 
-**Software v3.0.0 · Firmware v1.4 · Serial protocol v1**
+<br>
 
-[![Tests](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml/badge.svg)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml)
-[![CodeQL](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml/badge.svg)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml)
-[![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
-![python](https://img.shields.io/badge/python-3.10%2B-blue)
-![status](https://img.shields.io/badge/hardware-assembled%20%26%20verified-brightgreen)
-![languages](https://img.shields.io/badge/languages-8-blueviolet)
+[![Latest release](https://img.shields.io/github/v/release/PrimeBuild-pc/MouseLatencyTester?style=for-the-badge&logo=github&label=latest&color=5b9cff)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/PrimeBuild-pc/MouseLatencyTester/total?style=for-the-badge&logo=github&label=downloads&color=4ade80)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases)
+[![Latest downloads](https://img.shields.io/github/downloads/PrimeBuild-pc/MouseLatencyTester/latest/total?style=for-the-badge&label=latest%20downloads&color=4ade80)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest)
+
+[![Tests](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/tests.yml?branch=main&style=flat-square&logo=github&label=tests)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/codeql.yml?branch=main&style=flat-square&logo=github&label=CodeQL)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml)
+[![Coverage](https://img.shields.io/badge/core%20coverage-87%25-4ade80?style=flat-square)](#development)
+[![Tests count](https://img.shields.io/badge/tests-217-4ade80?style=flat-square)](tests)
+[![Licence](https://img.shields.io/github/license/PrimeBuild-pc/MouseLatencyTester?style=flat-square&color=fbbf24)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-5b9cff?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-5b9cff?style=flat-square&logo=windows&logoColor=white)](docs/installation_windows.md)
+[![Languages](https://img.shields.io/badge/UI%20languages-8-a78bfa?style=flat-square)](#languages)
+[![Firmware](https://img.shields.io/badge/firmware-v1.4-fbbf24?style=flat-square&logo=arduino&logoColor=white)](firmware)
+[![Hardware](https://img.shields.io/badge/hardware-assembled%20%26%20verified-4ade80?style=flat-square)](#hardware)
+
+<br>
+
+**Measure how long your mouse actually takes to click — to the microsecond.**
+
+A Teensy 2.0 watches a probe touch the switch, the dashboard watches Windows report the click,<br>
+and the difference is your real input latency. Archive it, chart it, compare it.
+
+<br>
+
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest">
+<img src="https://img.shields.io/badge/%E2%AC%87%20Download%20for%20Windows-5b9cff?style=for-the-badge&logoColor=white" alt="Download for Windows" height="42">
+</a>
+
+<sub>No hardware yet? The app ships a built-in simulator — <b>Settings → Demo mode</b>.</sub>
+
+</div>
+
+<br>
+
+---
+
+## Gallery
+
+<div align="center">
+
+<img src="docs/images/live-dark.png" alt="Live test tab, dark theme" width="92%">
+
+<sub><b>Live test</b> — mean, median, P5/P95/P99, IQR, MAD and jitter, with outliers ringed on the chart.</sub>
+
+</div>
+
+<br>
+
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/compare-box.png" alt="Compare tab with box plot" width="100%"><br>
+<sub><b>Compare</b> — box plot with baseline deltas in ms and %</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/compare-ecdf.png" alt="Compare tab with ECDF chart" width="100%"><br>
+<sub><b>ECDF</b> — where the slow clicks actually live</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/testmode-armed.png" alt="Test mode, armed" width="100%"><br>
+<sub><b>Test mode</b> — 🟩 armed, press now</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/testmode-wait.png" alt="Test mode, waiting" width="100%"><br>
+<sub><b>Test mode</b> — 🟥 wait / release</sub>
+</td>
+</tr>
+</table>
+
+<details>
+<summary><b>More screenshots</b> — light theme, sessions, devices, settings, raw samples, histogram</summary>
+<br>
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/live-light.png" alt="Live test tab, light theme" width="100%"><br>
+<sub>Live test — light theme</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/sessions.png" alt="Sessions archive" width="100%"><br>
+<sub>Sessions — searchable archive</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/compare-samples.png" alt="Raw sample comparison" width="100%"><br>
+<sub>Compare — raw samples</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/compare-histogram.png" alt="Histogram comparison" width="100%"><br>
+<sub>Compare — histogram</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/devices.png" alt="Device profiles" width="100%"><br>
+<sub>Devices — one profile per mouse</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/settings.png" alt="Settings with one-click update" width="100%"><br>
+<sub>Settings — theme, language, one-click update</sub>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center">
+<img src="docs/images/testmode-complete.png" alt="Test mode, target reached" width="50%"><br>
+<sub>Test mode — 🟦 target reached</sub>
+</td>
+</tr>
+</table>
+</details>
+
+<sub>Screenshots are taken in demo mode, which is why they carry the simulated-data banner.</sub>
 
 ---
 
 ## What this actually measures
 
-A metal probe is clamped so that it touches a strip of copper tape on the mouse
-button at the exact instant the switch actuates. That contact closure is **t₀**,
-taken inside an interrupt on the Teensy. The mouse then sends its HID report,
-Windows delivers the click, and the dashboard answers the Teensy — **t₁**. The
-calibrated serial round-trip is subtracted from `t₁ − t₀`.
+A metal probe is clamped so that it touches a strip of copper tape on the mouse button at the exact
+instant the switch actuates. That contact closure is **t₀**, taken inside an interrupt on the Teensy.
+The mouse then sends its HID report, Windows delivers the click, and the dashboard answers the
+Teensy — **t₁**. The calibrated serial round-trip is subtracted from `t₁ − t₀`.
 
-The result covers switch debounce, the mouse's internal processing, the
-wireless or USB link, the polling interval and the OS input stack. It does
-**not** cover display or render latency.
+The result covers switch debounce, the mouse's internal processing, the wireless or USB link, the
+polling interval and the OS input stack. It does **not** cover display or render latency.
 
-## Feature maturity — read this first
+### Feature maturity — read this first
 
 | | Feature | Status |
 |---|---|---|
-| 1 | **Probe method** — the measurement described above | ✅ **Working and verified on real hardware.** Every number the app produces comes from this path |
+| 1 | **Probe method** — the measurement above | ✅ **Working and verified on real hardware.** Every number the app produces comes from this path |
 | 2 | **OLED SH1106** | ✅ Working. Frozen during test mode so I²C traffic cannot disturb the timing |
-| 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. The `LIGHT` value is recorded with each run and displayed. It plays no part in any measurement |
-| 4 | **BTN1 / BTN2 physical buttons** | 🧪 **Wired, firmware v1.4, test phase.** Each press emits exactly one `BTN1:PRESS` / `BTN2:PRESS`, which the dashboard counts and logs. **No action is bound to them yet** — see [Button bring-up](#9-buttons--btn1--btn2) |
-| 5 | 2N2222A transistor + 220 Ω resistor | ⛔ **Not connected, not supported.** Their purpose has not been specified. Nothing in this repository anticipates them |
-| 6 | Photoresistor / click-to-photon measurement mode | ⛔ Does not exist and is not being faked. Awaiting a separate specification |
+| 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. Recorded with each run; it plays no part in any measurement |
+| 4 | **BTN1 / BTN2 buttons** | 🧪 **Wired, firmware v1.4, test phase.** Each press emits exactly one `BTN1:PRESS` / `BTN2:PRESS`, counted and logged. **No action bound yet** |
+| 5 | 2N2222A transistor + 220 Ω | ⛔ **Not connected, not supported.** Purpose not specified; nothing here anticipates it |
+| 6 | Photoresistor / click-to-photon mode | ⛔ Does not exist and is not being faked |
 
 Rows 5–6 are not implemented and no wiring for them is documented, on purpose.
 
@@ -43,58 +149,154 @@ Rows 5–6 are not implemented and no wiring for them is documented, on purpose.
 
 ## Install
 
-### Windows installer (recommended)
+<table>
+<tr>
+<td width="55%" valign="top">
 
-Download **`LatencyTester-<version>-Setup.exe`** from the
+### Windows installer &nbsp;<sub>recommended</sub>
+
+Grab **`LatencyTester-<version>-Setup.exe`** from the
 [latest release](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest).
 
 It installs the dashboard, **the firmware sketches** and the full documentation
-into one folder, so you can flash the Teensy without cloning anything. No admin
-rights are required by default, and your measurement archive lives outside the
-install directory and is never touched by the uninstaller.
+into a single folder, so you can flash the Teensy without cloning anything.
 
-The installer is not code-signed, so Windows SmartScreen will warn on first run
-— verify the `SHA256SUMS.txt` published with the release.
+- Per-user install by default — **no admin rights needed**
+- Your archive lives in `Documents\LatencyTester\` and is **never** touched by the uninstaller
+- Built-in **one-click updater**: *Settings → Check for updates*
+
+<sub>The installer is not code-signed, so SmartScreen warns on first run.
+Verify <code>SHA256SUMS.txt</code> from the release.</sub>
+
+</td>
+<td width="45%" valign="top">
 
 ### From source
 
 ```powershell
+git clone https://github.com/PrimeBuild-pc/MouseLatencyTester.git
+cd MouseLatencyTester
 pip install -r requirements.txt
 python run_dashboard.py
 ```
 
 ### No hardware?
 
-**Settings → Demo mode → Start demo device.** The whole interface, the charts
-and the archive work against a simulator that speaks the real protocol; runs
-recorded that way are flagged `[DEMO]` and never mixed with real measurements.
+**Settings → Demo mode → Start demo device.**
+
+A simulator that speaks the real serial protocol drives the whole interface,
+the charts and the archive. Runs saved that way are flagged `[DEMO]` and never
+mixed with real measurements.
+
+</td>
+</tr>
+</table>
 
 ### Languages
 
-English · Italiano · Deutsch · Español · Français · 日本語 · Русский · 中文
+<div align="center">
 
-Switch under *Settings → Language*; the choice persists. Adding another one is
-a single JSON file — see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
+🇬🇧 English &nbsp;·&nbsp; 🇮🇹 Italiano &nbsp;·&nbsp; 🇩🇪 Deutsch &nbsp;·&nbsp; 🇪🇸 Español &nbsp;·&nbsp; 🇫🇷 Français &nbsp;·&nbsp; 🇯🇵 日本語 &nbsp;·&nbsp; 🇷🇺 Русский &nbsp;·&nbsp; 🇨🇳 中文
 
-Full guides: [Installation](docs/installation_windows.md) ·
-[Flashing](docs/flashing_teensy.md) · [Bring-up & electrical notes](docs/wiring.md) ·
-[First measurement](docs/first_test.md) ·
-[Troubleshooting](docs/troubleshooting.md) ·
+</div>
+
+Switch under *Settings → Language*; the choice persists. Adding another is a single JSON file and
+**no Python at all** — see [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
+
+### Documentation
+
+[Installation](docs/installation_windows.md) &nbsp;·&nbsp;
+[Flashing the Teensy](docs/flashing_teensy.md) &nbsp;·&nbsp;
+[Bring-up & electrical notes](docs/wiring.md) &nbsp;·&nbsp;
+[First measurement](docs/first_test.md) &nbsp;·&nbsp;
+[Troubleshooting](docs/troubleshooting.md) &nbsp;·&nbsp;
 [Serial protocol](docs/serial_protocol.md)
 
 ---
 
-# Hardware
+## The dashboard
 
-Everything in this section describes the **build that is physically assembled
-and verified**, so it can be reproduced without any prior context.
+<table>
+<tr>
+<td width="33%" valign="top">
 
-## BOM / parts list
+#### 📊 Live test
+Mean, median, min, max, std dev, P5/P95/P99, IQR, MAD and jitter (P95−P5).
+Live chart with outliers ringed, plus `BTN1`/`BTN2` counters.
+
+</td>
+<td width="33%" valign="top">
+
+#### 🗂 Sessions
+Searchable archive. Rename, edit metadata, **duplicate as a template** for the
+next configuration, export to CSV.
+
+</td>
+<td width="33%" valign="top">
+
+#### 📈 Compare
+Raw samples, box plot, ECDF or histogram. Selectable **baseline** with
+Δ median / mean / P95 / P99 in ms and %. Export to PNG, SVG, PDF.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+#### 🖱 Devices
+One profile per mouse: manufacturer, model, serial, switch type, usual
+firmware, notes.
+
+</td>
+<td valign="top">
+
+#### ⚙️ Settings
+Eight languages, light / dark / system theme, archive backup, demo mode and
+**one-click update**. Preferences persist.
+
+</td>
+<td valign="top">
+
+#### 🎯 Test mode
+Full screen, colour-coded: 🟩 press · 🟥 wait · 🟦 done. The OLED is frozen so
+the display never disturbs the timing.
+
+</td>
+</tr>
+</table>
+
+> [!IMPORTANT]
+> **Raw data is never discarded.** Outliers are detected with the Tukey fence and **marked**, not
+> removed. They stay in the database, in the CSV export and in every statistic. Deciding what an
+> outlier means is the operator's job, not the software's.
+
+### A typical session
+
+```
+Razer Viper → 1000 Hz → 50 samples → Save → New run
+Razer Viper → 2000 Hz → 50 samples → Save → New run
+Razer Viper → 4000 Hz → 50 samples → Save → New run
+Razer Viper → 8000 Hz → 50 samples → Save
+→ Compare, baseline = 1000 Hz
+```
+
+All without restarting the program.
+
+---
+
+## Hardware
+
+Everything below describes the build that is **physically assembled and verified**, so it can be
+reproduced without any prior context.
+
+<details open>
+<summary><b>BOM / parts list</b></summary>
+<br>
 
 | Qty | Component | Function | Notes |
 |:--:|---|---|---|
 | 1 | **Teensy 2.0** (ATmega32U4, 16 MHz) | Takes t₀ in an ISR, computes latency, talks to the PC | The whole measurement lives here |
-| 1 | **OLED 1.30", 128×64, SH1106, I²C, 4-pin** | Local status display | Address `0x3C`, confirmed with an I²C scanner. **One** display, see note below |
+| 1 | **OLED 1.30", 128×64, SH1106, I²C, 4-pin** | Local status display | Address `0x3C`. **One** display — see note below |
 | 1 | **KY-018 photoresistor module** | `LIGHT` telemetry recorded with each run | Analog output. Not part of the measurement |
 | 2 | **Momentary push buttons** | `BTN1` / `BTN2` events | No external resistors — `INPUT_PULLUP` is used |
 | 1 | **Breadboard** (400 or 830 points) | Power rails and module mounting | |
@@ -109,15 +311,17 @@ and verified**, so it can be reproduced without any prior context.
 | 1 | 2N2222A NPN transistor | — | ⛔ **Present but NOT connected and NOT supported by the firmware** |
 | 1 | 220 Ω resistor | — | ⛔ **Present but NOT connected** |
 
-> **Note on the OLED count.** An earlier version of this project's parts list
-> mentioned *two* OLED displays as a future upgrade. **The validated build uses
-> exactly one.** A second display is not required and is not supported by the
-> firmware.
+> [!NOTE]
+> An earlier version of this project's parts list mentioned *two* OLED displays as a future upgrade.
+> **The validated build uses exactly one.** A second display is not required and is not supported.
 
-Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard
-rails.
+Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard rails.
 
-## Wiring — pin by pin
+</details>
+
+<details open>
+<summary><b>Wiring — pin by pin</b></summary>
+<br>
 
 | Component | Component pin | Teensy pad | Arduino pin | Wire colour | Function |
 |---|---|:--:|:--:|---|---|
@@ -138,14 +342,19 @@ rails.
 | BTN2 | leg B | `GND` | — | ⚫ Black | Pressed = LOW |
 | Built-in LED | — | `D6` | **11** | — | Lit while a measurement is pending |
 
-> **KY-018 pin order.** Always follow the `S` / `+` / `−` markings silkscreened
-> on the module. **Do not infer the order from the physical pin positions** —
-> it varies between manufacturers.
+> [!WARNING]
+> **KY-018 pin order:** always follow the `S` / `+` / `−` markings printed on the module.
+> **Do not infer the order from the physical pin positions** — it varies between manufacturers.
 
-> **`A0` on a Teensy 2.0** resolves to pad `F0` (digital 21) in Teensyduino.
-> That is why the sketch's `analogRead(A0)` reads the pad labelled `F0`.
+> [!TIP]
+> **`A0` on a Teensy 2.0** resolves to pad `F0` (digital 21) in Teensyduino. That is why the
+> sketch's `analogRead(A0)` reads the pad labelled `F0`.
 
-## Wire colour convention
+</details>
+
+<details>
+<summary><b>Wire colour convention</b></summary>
+<br>
 
 | Colour | Use |
 |---|---|
@@ -158,11 +367,15 @@ rails.
 | 🟠 Orange | BTN1 |
 | 🟣 Purple | BTN2 |
 
-**These colours are a project convention for readability, not an electrical
-requirement.** Any colour works electrically; keeping to the table makes the
-photos, the diagrams and the physical build agree with each other.
+**These colours are a project convention for readability, not an electrical requirement.** Any
+colour works electrically; keeping to the table makes the photos, the diagrams and the physical
+build agree with each other.
 
-## Diagram
+</details>
+
+<details>
+<summary><b>Diagram</b></summary>
+<br>
 
 ```text
                     TEENSY 2.0  (ATmega32U4, 16 MHz)
@@ -234,122 +447,65 @@ graph LR
     classDef todo fill:#2a2a2a,stroke:#b45309,stroke-dasharray: 5 4,color:#fbbf24
 ```
 
-The 2N2222A and its resistor appear in the diagram only to record that they
-exist and are **deliberately unconnected**. No connection for them is invented
-here.
+The 2N2222A and its resistor appear only to record that they exist and are **deliberately
+unconnected**. No connection for them is invented here.
 
-## Bring-up — test in this order
+</details>
 
-Each step must pass before moving to the next. Expected results are what you
-should actually see.
+<details>
+<summary><b>Bring-up — test in this order</b></summary>
+<br>
+
+Each step must pass before moving to the next.
 
 | # | Step | Expected result |
 |:--:|---|---|
-| 1 | **Teensy alone.** Flash the sketch, open the Serial Monitor at 115200 | `LATENCY_TESTER v1.4 OLED+LDR+BTN` then `READY`. The board enumerates as a COM port |
-| 2 | **Probe.** Touch the probe to the copper tape | `TRIG` appears. The pin-11 LED lights while the measurement is pending. With no dashboard running you then get `TIMEOUT:...` — that is correct |
-| 3 | **OLED I²C scan.** Run an I²C scanner sketch | Exactly one device found at `0x3C` |
-| 4 | **OLED display test.** Flash `firmware/displayTester/` | Text on the panel; the main sketch prints `OLED_OK:0x3C` instead of `OLED_FAIL` |
-| 5 | **KY-018 analog read.** Send `L` | `LIGHT:<value>`. Covered ≈ **0–20**; evening room light ≈ **150–250**; phone torch ≈ **1000**. Verify `+`/`−` with a multimeter |
-| 6 | **Probe + OLED + KY-018 together** | Probe still triggers; the display refreshes about twice a second; `LIGHT` tracks the room. Occasional `SKIP:OLED_REFRESH` outside test mode is normal and correct |
-| 7 | **Calibration.** Dashboard → *Calibrate* | `CALIB_OK:<offset>,samples:...`. The offset lands near 250 µs — see the [known quirk](docs/serial_protocol.md#6-calibration-sequence) |
-| 8 | **Test mode.** Dashboard → *ENTER TEST MODE* | Full-screen overlay; `TESTMODE:ON`; the OLED freezes; green ⇄ red tracks `ARMED` / `REARM`; blue at the target |
-| 9 | **BTN1 / BTN2** | See below — 10 presses must give exactly 10 events |
-| 10 | Transistor / light-sensing mode | ⛔ Not defined yet. Do not wire the 2N2222A |
+| 1 | **Teensy alone.** Flash, open Serial Monitor at 115200 | `LATENCY_TESTER v1.4 OLED+LDR+BTN` then `READY` |
+| 2 | **Probe.** Touch the probe to the copper tape | `TRIG` appears, pin-11 LED lights. Without the dashboard you then get `TIMEOUT:…` — that is correct |
+| 3 | **OLED I²C scan** | Exactly one device at `0x3C` |
+| 4 | **OLED display test** — `firmware/displayTester/` | Text on the panel; the main sketch prints `OLED_OK:0x3C` |
+| 5 | **KY-018.** Send `L` | Covered ≈ **0–20**, evening room ≈ **150–250**, phone torch ≈ **1000** |
+| 6 | **All three together** | Probe still triggers; display refreshes ~2×/s. Occasional `SKIP:OLED_REFRESH` outside test mode is normal and correct |
+| 7 | **Calibration** | `CALIB_OK:<offset>,…`. Lands near 250 µs — see the [known quirk](docs/serial_protocol.md#6-calibration-sequence) |
+| 8 | **Test mode** | Overlay appears, `TESTMODE:ON`, OLED freezes, green ⇄ red tracks `ARMED`/`REARM` |
+| 9 | **BTN1 / BTN2** | 10 presses → **exactly 10** events, no phantoms, no doubles, no repeat while held |
+| 10 | Transistor / light mode | ⛔ Not defined. Do not wire the 2N2222A |
 
-### 9. Buttons — BTN1 / BTN2
+Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 
-Firmware v1.4 is a **test phase**. The buttons are polled in `loop()` with a
-non-blocking 30 ms `millis()` debounce — never on an interrupt, and never
-printing anything between t₀ and t₁. They currently change no firmware state.
+</details>
 
-Flash v1.4, open the dashboard and press **BTN1 ten times, slowly**:
+<details>
+<summary><b>Electrical notes</b></summary>
+<br>
 
-```text
-BTN1:PRESS
-```
+- **Disconnect USB before soldering.** No exceptions.
+- **Never connect VCC directly to the probe signal.** `D2` is an input with an internal pull-up; it
+  expects to be shorted to **GND** and nothing else.
+- **All modules share a common GND.** Teensy, OLED, KY-018 and both buttons on the same rail.
+- **Follow the printed `S` / `+` / `−` labels on the KY-018.** Do not deduce from pin position.
+- **No external resistors on the buttons.** `INPUT_PULLUP` provides them; pull-downs break the logic.
+- **Do not assume the 2N2222A pinout.** EBC and ECB both exist depending on package and
+  manufacturer — and it is not to be wired yet regardless.
+- Measured supply on USB: **≈ 4.8 V**. Both the OLED and the KY-018 are fine at that level.
 
-Then the same with **BTN2**:
-
-```text
-BTN2:PRESS
-```
-
-The *Controls* panel on the Live test tab shows a live `BTN1` / `BTN2` counter
-so the totals are readable without scrolling the log.
-
-Pass criteria:
-
-* 10 presses of BTN1 → **exactly 10** `BTN1:PRESS`
-* 10 presses of BTN2 → **exactly 10** `BTN2:PRESS`
-* no phantom events while idle
-* no double events from one press
-* holding a button down does **not** repeat
-* normal mouse measurement still works
-
-Only after that passes do the buttons get real behaviour: **BTN1 = request
-enter/exit test mode**, **BTN2 = reset the live run while *not* in test mode**.
-The dashboard stays the authority on session state — the firmware only reports
-the event. Long presses, double clicks and combinations are out of scope.
-
-## Electrical notes
-
-* **Disconnect USB before soldering.** No exceptions.
-* **Never connect VCC directly to the probe signal.** The probe pin is an input
-  with an internal pull-up; it expects to be shorted to **GND**, nothing else.
-* **All modules share a common GND.** The Teensy, the OLED, the KY-018 and both
-  buttons must sit on the same ground rail or nothing reads correctly.
-* **Follow the printed `S` / `+` / `−` labels on the KY-018.** Do not deduce the
-  order from pin position.
-* **No external resistors on the buttons.** `INPUT_PULLUP` provides them.
-  Adding pull-downs will break the logic.
-* **Do not assume the 2N2222A pinout.** EBC and ECB orderings both exist
-  depending on package and manufacturer. Identify the exact part before wiring
-  it — and it is not to be wired yet regardless.
-* USB power measured ≈ 4.8 V. The OLED and KY-018 are both fine at that level.
+</details>
 
 ---
 
-## The dashboard
+## Firmware
 
-**Live test** — the running measurement, with mean, median, min, max, standard
-deviation, P5/P95/P99, IQR, MAD and jitter (P95−P5), a live chart with outliers
-ringed, the full run configuration, and `BTN1`/`BTN2` press counters.
+| Sketch | Notes |
+|---|---|
+| `latency_tester/` | v1.0 — probe only |
+| `latency_tester_oled_ldr/` | v1.1 — adds OLED + KY-018 |
+| `latency_tester_oled_ldr_v1_2/` | v1.2 — adds `SKIP:OLED_REFRESH` |
+| `latency_tester_oled_ldr_v1_3/` | v1.3 — debounce/re-arm, test mode, OLED freeze. **Measurement baseline** |
+| **`latency_tester_oled_ldr_v1_4/`** | **v1.4 — current. v1.3 plus BTN1/BTN2 test events. Measurement path byte-identical to v1.3** |
+| `displayTester/` | Standalone OLED check |
 
-**Sessions** — every saved run, searchable. Rename, edit metadata, duplicate as
-a template for the next configuration, export to CSV, delete.
-
-**Compare** — several runs at once as raw samples, box plot, ECDF or histogram,
-with a selectable baseline and Δ median / Δ mean / Δ P95 / Δ P99 in both
-milliseconds and percent. Charts export to PNG, SVG or PDF.
-
-**Devices** — profiles for each mouse: name, manufacturer, model, serial,
-switch type, usual firmware, notes.
-
-**Settings** — eight interface languages, light / dark / system theme, archive
-backup, demo mode. Both preferences persist.
-
-**Test mode** — full screen, colour-coded: 🟩 press · 🟥 wait · 🟦 done. The
-OLED is frozen while it runs so the display never disturbs the timing.
-
-### Raw data is never discarded
-
-Outliers are detected with the Tukey fence and **marked** on the chart. They
-stay in the database, in the CSV export and in every statistic. Deciding what
-an outlier means is the operator's job.
-
----
-
-## A typical session
-
-```
-Razer Viper → 1000 Hz → 50 samples → Save → New run
-Razer Viper → 2000 Hz → 50 samples → Save → New run
-Razer Viper → 4000 Hz → 50 samples → Save → New run
-Razer Viper → 8000 Hz → 50 samples → Save
-→ Compare, baseline = 1000 Hz
-```
-
-All without restarting the program.
+Older sketches still work; unknown tokens are logged, never dropped. Compatibility table in
+[docs/serial_protocol.md](docs/serial_protocol.md).
 
 ---
 
@@ -361,14 +517,15 @@ latency_tester/          the dashboard, as a package
   stats.py               percentiles, MAD, outliers, deltas  (pure functions)
   database.py            SQLite archive + schema migrations
   serial_service.py      reader thread, TRIG/click association
+  updater.py             checksum-verified one-click update
   demo.py                simulated Teensy
   settings.py            persisted preferences
-  i18n.py                Italian + English
+  i18n.py                translation loader
+  locales/               one JSON file per language
   theme.py               light / dark / system palettes
   widgets.py             tooltips, metric cards, live chart
   export.py              CSV
   app.py                 shell, state, event pump
-  locales/               one JSON file per language
   views/                 live · sessions · compare · devices · preferences · testmode
 firmware/                Arduino sketches, v1.0 → v1.4
 packaging/               PyInstaller spec, Inno Setup script, build script
@@ -377,82 +534,62 @@ docs/                    protocol, install, bring-up, first test, troubleshootin
 legacy/                  the previous single-file dashboards, still runnable
 ```
 
-The measurement and serial logic does not import tkinter, which is why it can
-be tested without a display.
-
-## Firmware versions
-
-| Sketch | Notes |
-|---|---|
-| `latency_tester/` | v1.0 — probe only |
-| `latency_tester_oled_ldr/` | v1.1 — adds OLED + KY-018 |
-| `latency_tester_oled_ldr_v1_2/` | v1.2 — adds `SKIP:OLED_REFRESH` |
-| `latency_tester_oled_ldr_v1_3/` | v1.3 — debounce/re-arm, test mode, OLED freeze. **Measurement baseline** |
-| **`latency_tester_oled_ldr_v1_4/`** | **v1.4 — current. v1.3 plus BTN1/BTN2 test events. The measurement path is byte-identical to v1.3** |
-| `displayTester/` | Standalone OLED check |
-
-Older sketches still work with this dashboard; unknown tokens are logged, never
-dropped. See the compatibility table in
-[docs/serial_protocol.md](docs/serial_protocol.md).
+The measurement and serial logic never imports tkinter, which is what lets it be tested headlessly.
 
 ## Development
 
 ```powershell
+pip install -r requirements-dev.txt
 python -m pytest tests -q
 ```
 
-110 tests cover protocol parsing (including the button tokens), the firmware
-button-debounce rules, statistics and percentiles, the database and its
-migration from the v2 schema, run save/load/duplicate, settings, i18n, the
-TRIG↔click association rules and the demo device. Tkinter is deliberately not
-pixel-tested.
+**217 tests**, **87% coverage of the non-GUI code** — the GUI is deliberately excluded rather than
+padded with tests that assert nothing. CI enforces the coverage floor, so the badge cannot drift
+down silently.
 
-`tests/test_button_debounce.py` mirrors `serviceButtons()` /
-`flushButtonEvents()` from the v1.4 sketch line for line, so the bench
-acceptance rules — ten presses give ten events, a held button never repeats,
-nothing is transmitted between t₀ and t₁ — are checked in CI. It is a mirror,
-not an import: if the `.ino` changes, change the test too.
+Covered: protocol parsing including the button tokens, the firmware button-debounce rules,
+statistics and percentiles, the database and its migration from the older schema, run
+save/load/duplicate, CSV export, settings, every locale, the updater's checksum verification and
+host allow-listing, the TRIG↔click association, and the demo device.
 
-Adding a language: add one entry to `TRANSLATIONS` in `latency_tester/i18n.py`.
-A test enforces that every language defines the same key set.
+`tests/test_button_debounce.py` mirrors `serviceButtons()` / `flushButtonEvents()` from the v1.4
+sketch line for line, so the bench acceptance rules are checked in CI. It is a **mirror, not an
+import**: if the `.ino` changes, change the test too.
 
-## Data
-
-Archive and preferences live in `~/Documents/LatencyTester/`, or wherever
-`LATENCY_TESTER_HOME` points. The database is migrated in place and **never**
-recreated or dropped; *Settings → Back up the archive* makes a consistent copy.
-
-## Building the installer yourself
+### Building the installer
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File packaginguild_installer.ps1
+powershell -ExecutionPolicy Bypass -File packaging\build_installer.ps1
 ```
 
-Requires [Inno Setup 6](https://jrsoftware.org/isdl.php). The script runs the
-test suite first and refuses to build if anything fails, then emits the
-installer and its SHA-256 into `build\installer\`.
+Requires [Inno Setup 6](https://jrsoftware.org/isdl.php). The script runs the tests first and
+refuses to build if anything fails, then emits the installer and its SHA-256 into
+`build\installer\`.
+
+---
 
 ## Contributing
 
-Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the setup,
-the testing rules and how to add a language — the last of which needs no Python
-at all and is the easiest place to start.
+Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, testing rules and how to
+add a language — the last of which needs no Python and is the easiest place to start.
 
-One rule matters above the others: **changes to the measurement pipeline need
-before/after numbers**, not opinions. Everything else is fair game.
+One rule matters above the others: **changes to the measurement pipeline need before/after
+numbers**, not opinions. Everything else is fair game.
 
-Security issues go through [private reporting](https://github.com/PrimeBuild-pc/MouseLatencyTester/security/advisories/new),
+Security issues go through
+[private reporting](https://github.com/PrimeBuild-pc/MouseLatencyTester/security/advisories/new),
 never a public issue — see [SECURITY.md](SECURITY.md).
 
 ## Privacy
 
-No telemetry, no network code, no auto-update. Every measurement stays in a
-local SQLite file under your Documents folder.
+No telemetry, no analytics, no background network activity. Every measurement stays in a local
+SQLite file under your Documents folder. The only network request the app ever makes is the update
+check, and only when **you** press the button.
 
 ## Licence
 
 [MIT](LICENSE) © 2026 PrimeBuild.
 
-## Credits
-
-Built around a Teensy 2.0 (PJRC), with `pyserial`, `pynput` and `matplotlib`.
+<div align="center">
+<sub>Built around a Teensy 2.0 (PJRC), with <code>pyserial</code>, <code>pynput</code> and <code>matplotlib</code>.</sub>
+</div>

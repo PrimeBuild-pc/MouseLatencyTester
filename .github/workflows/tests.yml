@@ -37,6 +37,12 @@ jobs:
         # database layers never import tkinter, so this runs headless.
         run: python -m pytest tests -q
 
+      - name: Coverage floor
+        # Keeps the README badge honest: the run fails if non-GUI coverage
+        # drops below the threshold in pyproject.toml.
+        if: matrix.python == '3.12'
+        run: python -m pytest tests -q --cov
+
   locales:
     name: Locale integrity
     runs-on: ubuntu-latest
@@ -45,6 +51,6 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install pytest
+      - run: pip install pytest pytest-cov
       - name: Validate every locale against English
         run: python -m pytest tests/test_locales.py -q

@@ -197,5 +197,22 @@
   "tip.demo": "Simulierte Daten. Werden nie mit echten Durchläufen vermischt.",
   "tip.light": "KY-018-Telemetrie, wird mit dem Durchlauf gespeichert. Sie ist nicht Teil der Messung.",
   "tip.polling": "Wird nur im Archiv vermerkt; es ändert nicht, wie der Teensy misst.",
-  "tip.target": "Der Testmodus wechselt zu Blau, sobald so viele Messwerte erfasst wurden."
+  "tip.target": "Der Testmodus wechselt zu Blau, sobald so viele Messwerte erfasst wurden.",
+  "update.available": "Version {version} ist verfügbar ({size} MB).",
+  "update.check": "Nach Aktualisierungen suchen",
+  "update.checking": "Suche läuft…",
+  "update.confirm": "Version {version} wird heruntergeladen ({size} MB), gegen die veröffentlichte SHA-256 geprüft und installiert.\n\nDie App wird geschlossen, damit das Installationsprogramm die Dateien ersetzen kann. Ungespeicherte Messwerte gehen verloren.\n\nFortfahren?",
+  "update.confirm_title": "Aktualisierung installieren",
+  "update.current": "Installierte Version: {version}",
+  "update.downloading": "Wird heruntergeladen… {percent} %",
+  "update.failed": "Aktualisierung fehlgeschlagen: {error}",
+  "update.hint": "Aktualisierungen werden ausschließlich von den offiziellen GitHub-Releases des Projekts geladen und vor der Ausführung gegen die veröffentlichte SHA-256 geprüft.",
+  "update.install": "{version} herunterladen und installieren",
+  "update.open_page": "Release-Seite öffnen",
+  "update.source_note": "Ausführung aus dem Quellcode: Aktualisierungen werden nicht automatisch installiert. Aktualisiere stattdessen das Repository.",
+  "update.title": "Aktualisierungen",
+  "update.unsaved": "Der aktuelle Durchlauf enthält ungespeicherte Messwerte. Speichere oder verwirf sie vor der Aktualisierung.",
+  "update.up_to_date": "Du verwendest die neueste Version.",
+  "update.verified": "Prüfsumme bestätigt. Das Installationsprogramm startet jetzt und die App wird geschlossen.",
+  "update.verifying": "Download wird überprüft…"
 }

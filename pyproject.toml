@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "latency-tester"
-version = "3.0.0"
+version = "1.0.0"
 description = "Microsecond mouse click latency benchmarking with a Teensy 2.0 probe"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,6 +37,30 @@ latency_tester = ["locales/*.json"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.coverage.run]
+source = ["latency_tester"]
+# The GUI is deliberately not measured: tkinter is not pixel-tested, so
+# including it would only produce a number that says nothing about test
+# quality. What is measured is everything the measurement pipeline runs on.
+omit = [
+    "latency_tester/app.py",
+    "latency_tester/views/*",
+    "latency_tester/widgets.py",
+    "latency_tester/theme.py",
+    "latency_tester/__main__.py",
+    "latency_tester/constants.py",
+]
+
+[tool.coverage.report]
+# The coverage badge in the README must never be able to drift down silently.
+fail_under = 85
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
 
 [tool.ruff]
 line-length = 100

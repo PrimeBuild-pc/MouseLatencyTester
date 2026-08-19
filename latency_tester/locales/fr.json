@@ -197,5 +197,22 @@
   "tip.demo": "Données simulées. Jamais mélangées aux séries réelles.",
   "tip.light": "Télémétrie KY-018, enregistrée avec la série. Elle ne fait pas partie de la mesure.",
   "tip.polling": "Consigné uniquement dans l'archive ; cela ne change pas la façon dont la Teensy mesure.",
-  "tip.target": "Le mode test passe au bleu une fois ce nombre d'échantillons atteint."
+  "tip.target": "Le mode test passe au bleu une fois ce nombre d'échantillons atteint.",
+  "update.available": "La version {version} est disponible ({size} Mo).",
+  "update.check": "Rechercher des mises à jour",
+  "update.checking": "Vérification en cours…",
+  "update.confirm": "La version {version} va être téléchargée ({size} Mo), vérifiée avec le SHA-256 publié puis installée.\n\nL'application se fermera pour laisser l'installateur remplacer ses fichiers. Les échantillons non enregistrés seront perdus.\n\nContinuer ?",
+  "update.confirm_title": "Installer la mise à jour",
+  "update.current": "Version installée : {version}",
+  "update.downloading": "Téléchargement… {percent} %",
+  "update.failed": "Échec de la mise à jour : {error}",
+  "update.hint": "Les mises à jour ne sont téléchargées que depuis les releases GitHub officielles du projet et sont vérifiées avec le SHA-256 publié avant toute exécution.",
+  "update.install": "Télécharger et installer {version}",
+  "update.open_page": "Ouvrir la page de la release",
+  "update.source_note": "Exécution depuis les sources : la mise à jour automatique n'est pas disponible. Mets plutôt le dépôt à jour.",
+  "update.title": "Mises à jour",
+  "update.unsaved": "La série en cours contient des échantillons non enregistrés. Enregistre-les ou abandonne-les avant de mettre à jour.",
+  "update.up_to_date": "Tu utilises la dernière version.",
+  "update.verified": "Somme de contrôle vérifiée. L'installateur va démarrer et l'application se fermer.",
+  "update.verifying": "Vérification du fichier téléchargé…"
 }

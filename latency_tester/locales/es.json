@@ -197,5 +197,22 @@
   "tip.demo": "Datos simulados. Nunca se mezclan con series reales.",
   "tip.light": "Telemetría del KY-018, guardada con la serie. No forma parte de la medición.",
   "tip.polling": "Solo se registra en el archivo; no cambia la forma en que mide la Teensy.",
-  "tip.target": "El modo de prueba pasa a azul cuando se alcanza este número de muestras."
+  "tip.target": "El modo de prueba pasa a azul cuando se alcanza este número de muestras.",
+  "update.available": "La versión {version} está disponible ({size} MB).",
+  "update.check": "Buscar actualizaciones",
+  "update.checking": "Comprobando…",
+  "update.confirm": "Se descargará la versión {version} ({size} MB), se verificará con el SHA-256 publicado y se instalará.\n\nLa aplicación se cerrará para que el instalador pueda reemplazar sus archivos. Las muestras sin guardar se perderán.\n\n¿Continuar?",
+  "update.confirm_title": "Instalar la actualización",
+  "update.current": "Versión instalada: {version}",
+  "update.downloading": "Descargando… {percent} %",
+  "update.failed": "La actualización ha fallado: {error}",
+  "update.hint": "Las actualizaciones solo se descargan desde las versiones oficiales del proyecto en GitHub y se verifican con el SHA-256 publicado antes de ejecutar nada.",
+  "update.install": "Descargar e instalar {version}",
+  "update.open_page": "Abrir la página de la versión",
+  "update.source_note": "Ejecución desde el código fuente: la actualización automática no está disponible. Actualiza el repositorio en su lugar.",
+  "update.title": "Actualizaciones",
+  "update.unsaved": "La serie actual tiene muestras sin guardar. Guárdalas o descártalas antes de actualizar.",
+  "update.up_to_date": "Estás en la última versión.",
+  "update.verified": "Suma de comprobación verificada. El instalador va a iniciarse y la aplicación se cerrará.",
+  "update.verifying": "Verificando la descarga…"
 }

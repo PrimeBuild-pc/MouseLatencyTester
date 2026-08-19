@@ -45,6 +45,7 @@ the charts and the archive are all usable.
 ## Before you open a pull request
 
 - [ ] `python -m pytest tests -q` passes
+- [ ] `python -m pytest tests --cov` stays at or above the 85% floor
 - [ ] new logic has a test (see below)
 - [ ] no new runtime dependency unless it genuinely earns its place
 - [ ] the app still starts, in demo mode at minimum
@@ -57,12 +58,27 @@ tkinter, which is what makes that possible.
 
 Tkinter is **not** pixel-tested. Don't add tests that try.
 
-Two files are **mirrors of the firmware**, not imports of it:
+Coverage is measured on the non-GUI modules only — the GUI is excluded rather
+than padded with tests that assert nothing. CI fails below **85%**.
 
-- `tests/test_button_debounce.py` transcribes `serviceButtons()` /
-  `flushButtonEvents()` from the v1.4 sketch.
+`tests/test_button_debounce.py` is a **mirror of the firmware**, not an import
+of it: it transcribes `serviceButtons()` / `flushButtonEvents()` from the v1.4
+sketch. If you change the corresponding `.ino`, change the mirror in the same
+PR.
 
-If you change the corresponding `.ino`, change the mirror in the same PR.
+### The updater
+
+`latency_tester/updater.py` downloads and runs an executable, so it is held to a
+higher bar than the rest of the code:
+
+- the repository is hard-coded; nothing configurable may redirect it;
+- only HTTPS GitHub hosts are accepted;
+- the installer is verified against the release's `SHA256SUMS.txt` **before** it
+  is executed, and a mismatch deletes the file and aborts;
+- a release without a published checksum is refused outright.
+
+Any PR touching it must keep every one of those, and the tests that prove
+them.
 
 ## Adding a language
 

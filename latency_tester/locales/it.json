@@ -197,5 +197,22 @@
   "tip.demo": "Dati simulati. Mai mescolati alle run reali.",
   "tip.light": "Telemetria KY-018, salvata con la run. Non fa parte della misura.",
   "tip.polling": "Registrato solo nell'archivio: non cambia il modo in cui la Teensy misura.",
-  "tip.target": "Il test mode diventa blu quando raggiunge questo numero di campioni."
+  "tip.target": "Il test mode diventa blu quando raggiunge questo numero di campioni.",
+  "update.available": "È disponibile la versione {version} ({size} MB).",
+  "update.check": "Cerca aggiornamenti",
+  "update.checking": "Controllo in corso…",
+  "update.confirm": "La versione {version} verrà scaricata ({size} MB), verificata con lo SHA-256 pubblicato e installata.\n\nL'app si chiuderà per permettere all'installer di sostituire i file. I campioni non salvati andranno persi.\n\nContinuare?",
+  "update.confirm_title": "Installa aggiornamento",
+  "update.current": "Versione installata: {version}",
+  "update.downloading": "Download… {percent}%",
+  "update.failed": "Aggiornamento non riuscito: {error}",
+  "update.hint": "Gli aggiornamenti vengono scaricati solo dalle release GitHub ufficiali del progetto e vengono verificati con lo SHA-256 pubblicato prima di eseguire qualsiasi cosa.",
+  "update.install": "Scarica e installa {version}",
+  "update.open_page": "Apri la pagina della release",
+  "update.source_note": "Esecuzione dai sorgenti: l'aggiornamento automatico non è disponibile. Aggiorna il repository con git pull.",
+  "update.title": "Aggiornamenti",
+  "update.unsaved": "La run corrente contiene campioni non salvati. Salvali o scartali prima di aggiornare.",
+  "update.up_to_date": "Stai usando l'ultima versione.",
+  "update.verified": "Checksum verificato. L'installer sta per partire e l'app si chiuderà.",
+  "update.verifying": "Verifica del file scaricato…"
 }

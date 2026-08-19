@@ -197,5 +197,22 @@
   "tip.demo": "Simulated data. Never mixed with real runs.",
   "tip.light": "KY-018 telemetry, stored with the run. It is not part of the measurement.",
   "tip.polling": "Reported in the archive only; it does not change how the Teensy measures.",
-  "tip.target": "Test mode switches to blue when this many samples are collected."
+  "tip.target": "Test mode switches to blue when this many samples are collected.",
+  "update.available": "Version {version} is available ({size} MB).",
+  "update.check": "Check for updates",
+  "update.checking": "Checking…",
+  "update.confirm": "Version {version} will be downloaded ({size} MB), verified against its published SHA-256 and installed.\n\nThe app will close so the installer can replace its files. Unsaved samples will be lost.\n\nContinue?",
+  "update.confirm_title": "Install update",
+  "update.current": "Installed version: {version}",
+  "update.downloading": "Downloading… {percent}%",
+  "update.failed": "Update failed: {error}",
+  "update.hint": "Updates are downloaded only from the project's official GitHub releases and are verified against the published SHA-256 before anything is run.",
+  "update.install": "Download and install {version}",
+  "update.open_page": "Open the release page",
+  "update.source_note": "Running from source: updates are not installed automatically. Update the repository instead.",
+  "update.title": "Updates",
+  "update.unsaved": "The current run has unsaved samples. Save or discard them before updating.",
+  "update.up_to_date": "You are on the latest version.",
+  "update.verified": "Checksum verified. The installer will now start and the app will close.",
+  "update.verifying": "Verifying the download…"
 }

@@ -197,5 +197,22 @@
   "tip.demo": "シミュレートされたデータです。実際の計測と混ざることはありません。",
   "tip.light": "KY-018 のテレメトリで、計測と一緒に保存されます。測定そのものには含まれません。",
   "tip.polling": "アーカイブに記録されるだけで、Teensy の測定方法は変わりません。",
-  "tip.target": "この件数のサンプルを取得すると、テストモードが青に変わります。"
+  "tip.target": "この件数のサンプルを取得すると、テストモードが青に変わります。",
+  "update.available": "バージョン {version} が利用できます ({size} MB)。",
+  "update.check": "アップデートを確認",
+  "update.checking": "確認中…",
+  "update.confirm": "バージョン {version} をダウンロード ({size} MB) し、公開されている SHA-256 で検証してからインストールします。\n\nインストーラーがファイルを置き換えられるよう、アプリは終了します。未保存のサンプルは失われます。\n\n続行しますか？",
+  "update.confirm_title": "アップデートをインストール",
+  "update.current": "インストール済みのバージョン: {version}",
+  "update.downloading": "ダウンロード中… {percent}%",
+  "update.failed": "アップデートに失敗しました: {error}",
+  "update.hint": "アップデートはこのプロジェクトの公式 GitHub リリースからのみダウンロードされ、実行前に公開された SHA-256 で検証されます。",
+  "update.install": "{version} をダウンロードしてインストール",
+  "update.open_page": "リリースページを開く",
+  "update.source_note": "ソースから実行中です: 自動更新は行われません。リポジトリを更新してください。",
+  "update.title": "アップデート",
+  "update.unsaved": "現在の計測に未保存のサンプルがあります。更新する前に保存するか破棄してください。",
+  "update.up_to_date": "最新バージョンをお使いです。",
+  "update.verified": "チェックサムを確認しました。インストーラーを起動し、アプリを終了します。",
+  "update.verifying": "ダウンロードしたファイルを検証しています…"
 }
