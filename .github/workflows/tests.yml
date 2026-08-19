@@ -40,7 +40,12 @@ jobs:
       - name: Coverage floor
         # Keeps the README badge honest: the run fails if non-GUI coverage
         # drops below the threshold in pyproject.toml.
-        if: matrix.python == '3.12'
+        #
+        # Windows only, on purpose. devices.py is a Win32 implementation that
+        # simply cannot execute on Linux, so measuring there would report ~32%
+        # for that module and say nothing about test quality. The tests
+        # themselves still run on both platforms.
+        if: runner.os == 'Windows' && matrix.python == '3.12'
         run: python -m pytest tests -q --cov
 
   locales:
