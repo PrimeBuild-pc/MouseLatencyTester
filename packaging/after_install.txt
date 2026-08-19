@@ -1,0 +1,30 @@
+Latency Tester is installed.
+
+WHAT WAS INSTALLED
+  LatencyTester.exe   the dashboard
+  firmware\           Arduino sketches, v1.0 to v1.4 (flash v1.4)
+  docs\               protocol reference, wiring, bring-up, troubleshooting
+
+FIRST RUN, WITHOUT HARDWARE
+  Open Settings -> Demo mode -> Start demo device.
+  The whole interface, the charts and the archive work against a simulator.
+  Runs recorded that way are flagged [DEMO] and are never mixed with real
+  measurements.
+
+FIRST RUN, WITH HARDWARE
+  1. Flash firmware\latency_tester_oled_ldr_v1_4 with the Arduino IDE plus
+     Teensyduino. See docs\flashing_teensy.md.
+  2. Close the Arduino Serial Monitor - only one program can own the COM port.
+  3. Start Latency Tester. The Teensy is detected automatically.
+  4. Press Calibrate, then ENTER TEST MODE.
+  See docs\first_test.md for the full walkthrough.
+
+YOUR DATA
+  Measurements and preferences are stored in
+      Documents\LatencyTester\
+  This folder is NOT removed when you uninstall.
+  Settings -> Back up the archive makes a safe copy at any time.
+
+LANGUAGES
+  English, Italiano, Deutsch, Espanol, Francais, 日本語, Русский, 中文
+  Change it under Settings -> Language.
