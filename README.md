@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/in-development.svg" alt="in development..." width="420">
+
 <img src="docs/images/banner.png" alt="MouseLatencyTester" width="100%">
 
 <br>
