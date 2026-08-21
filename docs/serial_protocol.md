@@ -367,10 +367,17 @@ is planned.
   definition, and the optical one because the PC is what paints the target.
 * **Long presses, double clicks and button chords.** Out of scope; one event per
   press is the whole contract.
-* **A frame-rate cap on the optical target**, and anything that would let the
-  dashboard choose a DXGI flip model. See
-  [README → Roadmap](../README.md#roadmap) for why the second one cannot be done
-  honestly from a Tk window.
+* **Anything that would let the dashboard choose a DXGI flip model.** See
+  [README → Roadmap](../README.md#roadmap) for why it cannot be done honestly
+  from a Tk window.
+* **In-game measurement.** Reserved in the archive vocabulary as
+  `probe_to_photon_ingame` so a run written by a later build stays readable, but
+  no command, token or firmware exists. It wants the photodiode front-end first.
+* **The photodiode front-end.** Designed, not built: see
+  [optical_front_end.md](optical_front_end.md). When it lands, `t₁` becomes a
+  comparator interrupt on `D3`/digital 8 instead of a threshold crossing found by
+  polling `A0`. The `OPT:` wire format does not have to change for that; `raw`
+  becomes a debug reading taken outside the timing window.
 
 ## 12. Probe-to-Photon sequence
 

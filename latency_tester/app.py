@@ -14,7 +14,8 @@ from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
 
 from . import SUPPORTED_FIRMWARE, __version__, export, protocol, serial_service, theme
-from .constants import MEASUREMENT_MODES, MODE_PHOTON, MODE_PROBE_PC
+from .constants import (FRAME_CAP_AUTO, FRAME_CAP_FALLBACK, MEASUREMENT_MODES,
+                        MODE_PHOTON, MODE_PROBE_PC)
 from .database import LatencyDB
 from .demo import PORT_NAME as DEMO_PORT
 from .demo import DemoDevice
@@ -140,6 +141,11 @@ class LatencyTesterApp:
         self.opt_bright_var = tk.StringVar(value="—")
         self.opt_threshold_var = tk.StringVar(value="—")
         self.opt_status_var = tk.StringVar(value=tr("photon.status_uncalibrated"))
+        # Frame cap for the optical target.  FRAME_CAP_AUTO means "whatever the
+        # monitor is running at", resolved when a test starts rather than now:
+        # the user may move the window to another screen in between.
+        self.frame_cap = _as_int(s.get("frame_cap"), FRAME_CAP_AUTO)
+        self.frame_cap_var = tk.StringVar()
 
         self.device_name_to_id: dict[str, int] = {}
 
@@ -445,6 +451,31 @@ class LatencyTesterApp:
         run, the standalone window otherwise."""
         return self.overlay if self.test_mode else self.cal_window
 
+    def monitor_hz(self) -> int | None:
+        """Refresh rate of the display, or ``None`` when Windows will not say."""
+        from . import devices as hardware
+        return hardware.refresh_rate_hz()
+
+    def effective_frame_cap(self) -> int:
+        """The fps the optical target will actually be driven at.
+
+        ``FRAME_CAP_AUTO`` resolves here, so a run always records a real number
+        and an archived optical figure stays interpretable.
+        """
+        if self.frame_cap != FRAME_CAP_AUTO:
+            return self.frame_cap
+        return self.monitor_hz() or FRAME_CAP_FALLBACK
+
+    def set_frame_cap(self, fps: int) -> None:
+        if self.test_mode:
+            return
+        self.frame_cap = int(fps)
+        self.settings.set("frame_cap", self.frame_cap)
+        self.settings.save()
+        # Keep the combobox in step whether the change came from it or not.
+        self.live_view.refresh_frame_caps()
+        self.log(tr("log.frame_cap", fps=self.effective_frame_cap()))
+
     def optical_ready(self) -> tuple[bool, str]:
         """Is the optical calibration good enough to start a test?
 
@@ -643,6 +674,7 @@ class LatencyTesterApp:
             "optical_dark": self.optical_dark if self.photon_mode else None,
             "optical_bright": self.optical_bright if self.photon_mode else None,
             "optical_threshold": self.optical_threshold if self.photon_mode else None,
+            "target_fps": self.effective_frame_cap() if self.photon_mode else None,
             "light_start": self.light_start,
             "light_end": self.light_end if self.light_end is not None else self.current_light,
             "started_at": self.run_started_at or datetime.now().isoformat(timespec="seconds"),
@@ -721,6 +753,7 @@ class LatencyTesterApp:
             auto_reset_on_test=bool(self.auto_reset_var.get()),
             measurement_mode=self.measure_mode_var.get(),
             confirm_btn2_reset=bool(self.confirm_btn2_var.get()),
+            frame_cap=self.frame_cap,
             last_device_id=self.device_name_to_id.get(self.device_var.get().strip()),
         )
         self.settings.save()

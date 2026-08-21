@@ -15,7 +15,7 @@ from typing import Any, Sequence
 
 from .constants import MODE_PROBE_PC
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # The v0 schema exactly as dashboard v2 created it.  Applied with IF NOT EXISTS
 # so an existing archive is left untouched and a fresh one starts from the same
@@ -89,6 +89,13 @@ _MIGRATIONS: list[list[str]] = [
         "ALTER TABLE runs ADD COLUMN optical_threshold INTEGER",
         "ALTER TABLE samples ADD COLUMN raw_optical INTEGER",
     ],
+    # -> 4 : the frame cap the optical target was running at.  Without it an
+    #        archived optical figure cannot be interpreted at all: half a frame
+    #        of quantisation is the difference between 30 and 360 fps.  NULL on
+    #        every existing row, which is honest -- those runs were uncapped.
+    [
+        "ALTER TABLE runs ADD COLUMN target_fps INTEGER",
+    ],
 ]
 
 DEVICE_FIELDS = ("name", "manufacturer", "model", "notes",
@@ -99,7 +106,7 @@ RUN_FIELDS = ("name", "polling_rate_hz", "connection_mode", "mouse_firmware",
               "notes", "target_samples", "calibration_us", "light_start",
               "light_end", "dpi", "debounce_setting", "teensy_firmware",
               "is_demo", "mode", "optical_dark", "optical_bright",
-              "optical_threshold")
+              "optical_threshold", "target_fps")
 
 
 def _now() -> str:
@@ -328,7 +335,8 @@ def _run_value(metadata: dict, key: str) -> Any:
     if key in ("target_samples", "calibration_us", "is_demo"):
         return int(value or 0)
     if key in ("polling_rate_hz", "light_start", "light_end", "dpi",
-               "optical_dark", "optical_bright", "optical_threshold"):
+               "optical_dark", "optical_bright", "optical_threshold",
+               "target_fps"):
         return int(value) if value not in (None, "") else None
     if value is None:
         return ""

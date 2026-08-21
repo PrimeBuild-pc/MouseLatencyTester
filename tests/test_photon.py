@@ -5,12 +5,19 @@ tests here are what keeps it that way: an ``OPT:`` line must never decode as a
 ``LAT:`` one, and a stored run must always say which mode produced it.
 """
 
+import importlib
 import sqlite3
 
 import pytest
 
 from latency_tester import protocol
-from latency_tester.constants import MODE_PHOTON, MODE_PROBE_PC
+from latency_tester.constants import (
+    FRAME_CAP_AUTO,
+    FRAME_CAP_FALLBACK,
+    FRAME_CAPS,
+    MODE_PHOTON,
+    MODE_PROBE_PC,
+)
 from latency_tester.database import SCHEMA_VERSION, LatencyDB, run_mode
 
 
@@ -289,3 +296,58 @@ def test_migrating_twice_changes_nothing(tmp_path):
         assert database.migrate() == SCHEMA_VERSION
     finally:
         database.close()
+
+
+# ---------------------------------------------------------------- frame cap --
+pytest.importorskip("tkinter")
+
+_app = importlib.import_module("latency_tester.app")
+LatencyTesterApp = _app.LatencyTesterApp
+
+
+class _CapApp:
+    """The frame-cap resolution, without a window around it."""
+
+    effective_frame_cap = LatencyTesterApp.effective_frame_cap
+
+    def __init__(self, frame_cap, monitor):
+        self.frame_cap = frame_cap
+        self._monitor = monitor
+
+    def monitor_hz(self):
+        return self._monitor
+
+
+@pytest.mark.parametrize("fps", FRAME_CAPS)
+def test_an_explicit_cap_is_used_as_is(fps):
+    assert _CapApp(fps, 144).effective_frame_cap() == fps
+
+
+def test_auto_follows_the_monitor():
+    assert _CapApp(FRAME_CAP_AUTO, 360).effective_frame_cap() == 360
+
+
+def test_auto_falls_back_when_the_refresh_rate_is_unknown():
+    """A run must always record a real number, so 'auto' can never stay auto."""
+    assert _CapApp(FRAME_CAP_AUTO, None).effective_frame_cap() == FRAME_CAP_FALLBACK
+
+
+def test_an_explicit_cap_ignores_the_monitor():
+    assert _CapApp(60, 360).effective_frame_cap() == 60
+
+
+def test_the_frame_cap_reaches_the_archive(db, device):
+    """Half a frame of quantisation is the difference between 30 and 360 fps;
+    an archived optical run without its cap cannot be interpreted."""
+    run_id = db.save_run(
+        {"device_id": device, "name": "capped", "mode": MODE_PHOTON,
+         "optical_dark": 100, "optical_bright": 900, "optical_threshold": 500,
+         "target_fps": 240},
+        [{"latency_ms": 12.0, "raw_optical": 880}])
+    assert db.get_run(run_id)["target_fps"] == 240
+
+
+def test_a_probe_to_pc_run_has_no_frame_cap(db, device):
+    run_id = db.save_run({"device_id": device, "name": "serial"},
+                         [{"latency_ms": 6.4}])
+    assert db.get_run(run_id)["target_fps"] is None

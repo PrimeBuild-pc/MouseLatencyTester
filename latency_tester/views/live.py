@@ -11,7 +11,8 @@ import threading
 from typing import TYPE_CHECKING
 
 from .. import devices as hardware
-from ..constants import (CONNECTION_MODES, MODE_PHOTON, MODE_PROBE_PC,
+from ..constants import (CONNECTION_MODES, FRAME_CAP_AUTO, FRAME_CAPS,
+                         MODE_INGAME, MODE_PHOTON, MODE_PROBE_PC,
                          POLLING_RATES)
 from ..i18n import translator as tr
 from ..protocol import CMD_LIGHT, CMD_STATS
@@ -118,6 +119,14 @@ class LiveView(ttk.Frame):
             radio.grid(row=0, column=column, sticky="w", padx=(0, 18))
             attach_tooltip(radio, tr(f"tip.{mode}"), palette)
 
+        # Shown but disabled: it needs the photodiode front-end, which is being
+        # built.  A greyed control that says why beats a surprise later.
+        soon = ttk.Radiobutton(picker, text=tr(f"mode.{MODE_INGAME}"),
+                               value=MODE_INGAME, state="disabled",
+                               variable=self.app.measure_mode_var)
+        soon.grid(row=0, column=2, sticky="w")
+        attach_tooltip(soon, tr(f"tip.{MODE_INGAME}"), palette)
+
         # Everything below is Probe-to-Photon only and is hidden otherwise.
         self.photon_box = ttk.Frame(box)
         self.photon_box.grid(row=1, column=0, sticky="ew", pady=(12, 0))
@@ -126,6 +135,18 @@ class LiveView(ttk.Frame):
         ttk.Label(self.photon_box, text=tr("photon.step_aim"), wraplength=340,
                   justify="left", style="Muted.TLabel").grid(
             row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+
+        cap = ttk.Frame(self.photon_box)
+        cap.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        cap.columnconfigure(1, weight=1)
+        ttk.Label(cap, text=tr("photon.frame_cap")).grid(row=0, column=0,
+                                                        sticky="w")
+        self.frame_cap_combo = ttk.Combobox(cap, state="readonly",
+                                            textvariable=self.app.frame_cap_var)
+        self.frame_cap_combo.grid(row=0, column=1, sticky="ew", padx=(8, 0))
+        self.frame_cap_combo.bind("<<ComboboxSelected>>", self._change_frame_cap)
+        attach_tooltip(self.frame_cap_combo, tr("tip.frame_cap"), palette)
+        self._fill_frame_caps()
 
         self.calibrate_btn = ttk.Button(
             self.photon_box, text=tr("photon.calibrate"),
@@ -149,11 +170,40 @@ class LiveView(ttk.Frame):
                   justify="left", style="Muted.TLabel").grid(
             row=5, column=0, columnspan=2, sticky="ew", pady=(8, 0))
 
+    # ------------------------------------------------------------ frame cap --
+    def _cap_label(self, fps: int) -> str:
+        if fps == FRAME_CAP_AUTO:
+            hz = self.app.monitor_hz()
+            return (tr("photon.cap_auto_known", hz=hz) if hz
+                    else tr("photon.cap_auto_unknown"))
+        return tr("photon.cap_fps", fps=fps)
+
+    def refresh_frame_caps(self) -> None:
+        """Rebuild the list and re-select.  Also picks up a monitor change."""
+        self._fill_frame_caps()
+
+    def _fill_frame_caps(self) -> None:
+        self._cap_values = (FRAME_CAP_AUTO, *FRAME_CAPS)
+        self.frame_cap_combo["values"] = [self._cap_label(f)
+                                          for f in self._cap_values]
+        current = self.app.frame_cap
+        if current not in self._cap_values:
+            current = FRAME_CAP_AUTO
+        self.app.frame_cap_var.set(self._cap_label(current))
+
+    def _change_frame_cap(self, _event=None) -> None:
+        chosen = self.app.frame_cap_var.get()
+        for fps in self._cap_values:
+            if self._cap_label(fps) == chosen:
+                self.app.set_frame_cap(fps)
+                return
+
     def refresh_mode(self) -> None:
         """Show the optical panel only in Probe-to-Photon."""
         if self.app.photon_mode:
             self.photon_box.grid()
             self.app.opt_status_var.set(self.app.optical_ready()[1])
+            self._fill_frame_caps()
         else:
             self.photon_box.grid_remove()
 
@@ -349,6 +399,10 @@ class LiveView(ttk.Frame):
         for button in (self.cal_btn, self.reset_btn, self.stats_btn,
                        self.light_btn, self.test_btn, self.calibrate_btn):
             button.configure(state=state)
+        # The cap is a test condition, not a device command: it stays editable
+        # while disconnected so a session can be set up before plugging in.
+        self.frame_cap_combo.configure(
+            state="disabled" if self.app.test_mode else "readonly")
 
     def get_notes(self) -> str:
         return self.notes.get("1.0", "end").strip()

@@ -210,6 +210,12 @@ long presses, double clicks or combinations.
 
 ---
 
+> [!NOTE]
+> A **photodiode front-end** is designed to replace the KY-018 — BPV10, OPA380,
+> TLV3501, with `t₁` becoming a hardware interrupt on `D3`/digital 8. It is
+> **not built**, and everything on this page describes the KY-018 tester that
+> works. Design and BOM: [optical_front_end.md](optical_front_end.md).
+
 ### 10. Probe-to-Photon
 
 **No new wiring.** `t₀` is still the probe on `D2` and the light transition is

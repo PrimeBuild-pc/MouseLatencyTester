@@ -19,6 +19,7 @@ measures everything up to the photons, the application included.
 from __future__ import annotations
 
 import logging
+import time
 import tkinter as tk
 from typing import TYPE_CHECKING
 
@@ -32,8 +33,9 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
-#: How often the optical target looks for a new OS click.  1 ms is the finest
-#: Tk offers; whatever is left is part of what click-to-photon measures.
+#: How often the optical target looks for a new OS click when no frame cap is in
+#: force.  1 ms is the finest Tk offers; whatever is left is part of what
+#: click-to-photon measures.
 TARGET_POLL_MS = 1
 #: The optical target, in pixels, and where it sits on the screen.  Deliberately
 #: large: the sensor is held on the glass with elastic bands, not aligned on an
@@ -173,6 +175,14 @@ class TestModeOverlay:
         self._poll_id: str | None = None
         self._alive = True
 
+        # Frame cadence.  A game samples input at the start of a frame and
+        # presents at the end, so one timer at the frame interval models both:
+        # a click lands at a uniform point inside a frame and waits for the next
+        # boundary, which is exactly the quantisation being measured.
+        self.frame_cap = app.effective_frame_cap() if self.photon else 0
+        self._frame_s = 1.0 / self.frame_cap if self.frame_cap else 0.001
+        self._next_frame = time.perf_counter() + self._frame_s
+
         window = tk.Toplevel(root)
         self.window = window
         window.title(f"{tr('app.title')} — {tr('test.title')}")
@@ -228,6 +238,10 @@ class TestModeOverlay:
             # The target owns the middle of the screen, so the numbers move up.
             inner.place_configure(rely=PHOTON_TEXT_RELY)
             self._build_target()
+            # On screen because a screenshot of a run has to carry its own
+            # conditions: the same mouse at 30 and at 360 fps is two results.
+            self._label(inner, tr("photon.frame_cap_active", fps=self.frame_cap),
+                        13, "bold", pady=(6, 0))
 
         self.set_mode("wait")
         window.focus_force()
@@ -285,7 +299,7 @@ class TestModeOverlay:
             log.debug("optical target is gone")
 
     def _poll_click(self) -> None:
-        """Turn the target white as soon as Windows reports a click."""
+        """Turn the target white on the first frame boundary after the click."""
         if not self._alive:
             return
         latest = self.app.serial.clicks.last_click_ns
@@ -295,8 +309,24 @@ class TestModeOverlay:
             # sampled; the calibration owns the target until it is done.
             if not self.calibrating:
                 self._set_target_bright(True)
+        self._schedule_next_frame()
+
+    def _schedule_next_frame(self) -> None:
+        """Keep the long-run cadence honest.
+
+        ``after()`` takes whole milliseconds, and 360 fps is 2.78 ms.  Rounding
+        every tick would drift 8%; aiming at an absolute deadline instead keeps
+        the average right even though individual ticks land on 3 ms or 2 ms.
+        """
+        now = time.perf_counter()
+        self._next_frame += self._frame_s
+        if self._next_frame < now:
+            # Fell behind -- Tk was busy, or the cap is finer than the event
+            # loop can serve.  Resynchronise rather than trying to catch up.
+            self._next_frame = now + self._frame_s
+        delay = max(TARGET_POLL_MS, round((self._next_frame - now) * 1000))
         try:
-            self._poll_id = self.window.after(TARGET_POLL_MS, self._poll_click)
+            self._poll_id = self.window.after(delay, self._poll_click)
         except tk.TclError:
             self._poll_id = None
 

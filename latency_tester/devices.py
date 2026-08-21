@@ -221,6 +221,69 @@ def _hid_strings(path: str, kernel32, hid, attributes_type) -> dict[str, str]:
     return result
 
 
+# ================================================================= display ==
+ENUM_CURRENT_SETTINGS = -1
+
+
+def refresh_rate_hz() -> int | None:
+    """The refresh rate of the primary display, or ``None`` if unknown.
+
+    Used to offer "match the monitor" as a frame cap.  Windows reports a
+    rounded integer here -- a 359.96 Hz panel comes back as 360 -- which is
+    fine, because the cap is a simulated cadence and not a hardware sync.
+    """
+    if not IS_WINDOWS:
+        return None
+    try:
+        from ctypes import wintypes
+
+        class DEVMODEW(ctypes.Structure):
+            _fields_ = [
+                ("dmDeviceName", wintypes.WCHAR * 32),
+                ("dmSpecVersion", wintypes.WORD),
+                ("dmDriverVersion", wintypes.WORD),
+                ("dmSize", wintypes.WORD),
+                ("dmDriverExtra", wintypes.WORD),
+                ("dmFields", wintypes.DWORD),
+                ("dmPositionX", ctypes.c_long),
+                ("dmPositionY", ctypes.c_long),
+                ("dmDisplayOrientation", wintypes.DWORD),
+                ("dmDisplayFixedOutput", wintypes.DWORD),
+                ("dmColor", ctypes.c_short),
+                ("dmDuplex", ctypes.c_short),
+                ("dmYResolution", ctypes.c_short),
+                ("dmTTOption", ctypes.c_short),
+                ("dmCollate", ctypes.c_short),
+                ("dmFormName", wintypes.WCHAR * 32),
+                ("dmLogPixels", wintypes.WORD),
+                ("dmBitsPerPel", wintypes.DWORD),
+                ("dmPelsWidth", wintypes.DWORD),
+                ("dmPelsHeight", wintypes.DWORD),
+                ("dmDisplayFlags", wintypes.DWORD),
+                ("dmDisplayFrequency", wintypes.DWORD),
+                ("dmICMMethod", wintypes.DWORD),
+                ("dmICMIntent", wintypes.DWORD),
+                ("dmMediaType", wintypes.DWORD),
+                ("dmDitherType", wintypes.DWORD),
+                ("dmReserved1", wintypes.DWORD),
+                ("dmReserved2", wintypes.DWORD),
+                ("dmPanningWidth", wintypes.DWORD),
+                ("dmPanningHeight", wintypes.DWORD),
+            ]
+
+        mode = DEVMODEW()
+        mode.dmSize = ctypes.sizeof(DEVMODEW)
+        if not ctypes.windll.user32.EnumDisplaySettingsW(
+                None, ENUM_CURRENT_SETTINGS, ctypes.byref(mode)):
+            return None
+        rate = int(mode.dmDisplayFrequency)
+        # 0 and 1 both mean "the driver did not say"; neither is a rate.
+        return rate if rate > 1 else None
+    except Exception:
+        log.debug("refresh rate lookup failed", exc_info=True)
+        return None
+
+
 # ============================================================== report rate =
 def compute_rate(timestamps_ns: list[int]) -> RateResult | None:
     """Reports per second of *active* movement.

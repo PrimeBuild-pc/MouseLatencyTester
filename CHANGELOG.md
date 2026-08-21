@@ -4,6 +4,46 @@ All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/);
 versioning follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **A frame cap on the optical target.** 30 / 60 / 120 / 240 / 360 / 500 /
+  1000 fps, or *Monitor*, which follows the refresh rate Windows reports.
+  Chosen per test in the optical panel. The target now changes only on a frame
+  boundary, so the wait for the next frame is measured rather than assumed —
+  on average half a frame. One timer drives both the input check and the
+  repaint, which is how a game loop works: input at the start of a frame,
+  present at the end. The schedule aims at an absolute deadline instead of
+  adding a rounded interval per tick, so 360 fps averages 2.78 ms rather than
+  drifting 8% on the 3 ms rounding.
+- **Schema v4** stores `runs.target_fps`. An archived optical figure without its
+  cap cannot be interpreted: half a frame is the whole difference between 30 and
+  360 fps. NULL on existing rows, which is honest — those runs were uncapped.
+- **Monitor refresh-rate detection** via `EnumDisplaySettingsW`, used only to
+  offer "follow the monitor" as a cap.
+- **In-game mode is visible and disabled** in the mode picker, with a tooltip
+  saying what it needs. `probe_to_photon_ingame` is reserved in the archive
+  vocabulary now so a run written by a later build stays readable by this one,
+  and no further migration is needed for it.
+
+### Documented, not built
+
+- **[docs/optical_front_end.md](docs/optical_front_end.md)** — a BPV10 photodiode
+  with an OPA380 transimpedance amplifier and a TLV3501 comparator, replacing the
+  KY-018. Full circuit, pinouts, decoupling and BOM. It moves `t₁` from a
+  software threshold on a sampled ADC value to a **hardware interrupt** on
+  `D3`/digital 8, timestamped in an ISR the way `t₀` already is, which takes the
+  sensor's own millisecond response out of the measurement. On a 360 Hz OLED the
+  KY-018 is the largest unknown left in the chain.
+
+  **Designed, not assembled.** No firmware talks to it, no measurement in this
+  repository comes from it, and the KY-018 build remains the shipped, verified
+  tester. `t₀` does not change in either mode, and the mouse is still never
+  touched.
+
+---
+
 ## [1.2.0] — 2026-08-21
 
 ### Added — a second way to measure

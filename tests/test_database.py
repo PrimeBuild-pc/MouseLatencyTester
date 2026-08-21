@@ -171,7 +171,7 @@ def test_save_and_reload_a_run_with_all_metadata(db, device):
         "light_end": 651, "dpi": 1600, "debounce_setting": "0 ms",
         "teensy_firmware": "v1.3", "is_demo": 0,
         "mode": "probe_to_pc", "optical_dark": None, "optical_bright": None,
-        "optical_threshold": None,
+        "optical_threshold": None, "target_fps": None,
         "started_at": "2026-02-01T10:00:00", "ended_at": "2026-02-01T10:04:00",
     }
     values = [5.1, 5.4, 6.0, 5.2]

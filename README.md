@@ -141,12 +141,20 @@ polling interval and the OS input stack. It does **not** cover display or render
 > strip of **removable** conductive copper tape on the outside of the left button. Peel it off and
 > the mouse is exactly as it was.
 
-### The hardware is finished
+### Where the project is
 
-Every part of the tester is built, wired and verified on the bench. Nothing in the list below is
-waiting on hardware. What is left is an **enclosure**: a 3D-printed box to hold the Teensy, the
-OLED, the KY-018 and the two buttons, so the thing stops being a breadboard. That is cosmetic and
-changes no measurement.
+**The KY-018 build is finished and it works.** Every part of it is built, wired and verified on the
+bench, and every release ships against it. Nothing in the table below is waiting on hardware.
+
+**A second front-end is being built** — a BPV10 photodiode with a transimpedance amplifier and a
+comparator, replacing the photoresistor. It is **designed, not assembled**: no firmware talks to it
+yet and no measurement in this repository comes from it. It matters because it moves `t₁` from a
+software threshold on a sampled ADC value to a **hardware interrupt**, which takes the sensor's own
+response out of the measurement — on a 360 Hz OLED the KY-018 is now the largest unknown left in
+the chain. Design and BOM: **[docs/optical_front_end.md](docs/optical_front_end.md)**.
+
+An **enclosure** is the other open item: a 3D-printed box for the whole thing, with a mount that
+holds the probe steady. That one changes no measurement.
 
 #### Feature maturity
 
@@ -157,8 +165,11 @@ changes no measurement.
 | 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. Recorded with each run; it plays no part in any measurement |
 | 4 | **BTN1 / BTN2 buttons** | ✅ **Working. 10/10 acceptance test passed on hardware.** BTN1 enters/leaves test mode, BTN2 clears the live run outside test mode. Presses are still counted and logged |
 | 5 | **Probe-to-Photon mode** | ✅ **Working, firmware v1.5.** Separate mode, own calibration, own metric. Verified on hardware: 40 clicks, ~16 ms median against ~3 ms on the same mouse in Probe-to-PC. Accuracy is limited by the KY-018 — [read this](#probe-to-photon) before quoting a number |
+| 6 | **Frame cap on the optical target** | ✅ Working. 30 / 60 / 120 / 240 / 360 / 500 / 1000 fps, or follow the monitor. Recorded with the run |
+| 7 | **Photodiode front-end** (BPV10 + OPA380 + TLV3501) | 🚧 **Designed, not built.** Would make `t₁` a hardware interrupt instead of a sampled threshold — [design](docs/optical_front_end.md) |
+| 8 | **In-game measurement** | 📋 Planned, and it needs row 7 first. Visible but disabled in the mode picker |
 
-Every row is built and verified. There is no component in this project that is wired but unused, and
+Rows 1–6 are built and verified. There is no component in this project that is wired but unused, and
 none that is listed but unwired.
 
 ---
@@ -587,6 +598,13 @@ screen, with a different backlight, and is worthless.
 7. Each sample arrives as `OPT:<ms>,raw:<adc>,…`. `raw` is the ADC value that tripped the threshold,
    kept per sample for debugging.
 
+**Pick a frame cap before you start.** The optical panel offers 30 / 60 / 120 / 240 / 360 / 500 /
+1000 fps and *Monitor*, which follows the detected refresh rate. The target then changes only on a
+frame boundary, exactly as a game presents, so the wait for the next frame lands inside the
+measurement instead of being assumed away. The cap in force is printed on the full-screen overlay
+and stored with the run: the same mouse at 30 fps and at 360 fps produces two different, both
+correct, results.
+
 There is deliberately **one** calibration button and no way to sample a baseline anywhere except a
 full-screen centred target: two readings from different parts of the screen describe different
 patches of backlight, and a threshold built from them is worthless. To check the sensor is alive
@@ -672,7 +690,8 @@ latency_tester/          the dashboard, as a package
 firmware/                Arduino sketches, v1.0 → v1.5
 packaging/               PyInstaller spec, Inno Setup script, build script
 tests/                   pytest suite
-docs/                    protocol, install, bring-up, first test, troubleshooting
+docs/                    protocol, install, bring-up, first test, troubleshooting,
+                         and the photodiode front-end design (not built yet)
 legacy/                  the previous single-file dashboards, still runnable
 ```
 
@@ -730,13 +749,15 @@ steady against the mouse button — probe alignment is the largest error source 
 and a printed jig fixes it better than a helping-hands clamp does. The STL will live in this
 repository when it exists. It changes no measurement.
 
-### 2. A frame-rate cap on the optical target
+### 2. A frame-rate cap on the optical target — **done**
 
-Today the target repaints as soon as the click is seen. A real game presents on a frame cadence, so
-click-to-photon includes **waiting for the next frame** — on average half a frame time. Making the
-cap settable would let that contribution be measured instead of assumed.
+The target now changes only on a frame boundary, so the wait for the next frame is measured instead
+of assumed — on average half a frame. Choose it per test in the optical panel: **30 / 60 / 120 /
+240 / 360 / 500 / 1000 fps**, or *Monitor*, which follows the detected refresh rate. The figure
+actually used is written into the run, because an archived optical number without its cap cannot be
+interpreted.
 
-Worth doing, with its limits stated up front:
+Its limits, stated up front:
 
 | Cap | Frame time | Mean added wait |
 |---:|---:|---:|
@@ -748,7 +769,13 @@ Worth doing, with its limits stated up front:
 The **coarse** steps are measurable; the fine ones are not. 240 → 360 is a 0.7 ms difference in the
 mean, which is below the KY-018's own noise, and a Tk window throttled with `after()` has no vsync
 and inherits the Windows timer granularity, so it reproduces a *cadence* rather than a real present
-path. Expect it to be honest at 30/60/120 and increasingly notional above that.
+path. Expect it to be honest at 30/60/120 and increasingly notional above that — until the
+photodiode front-end lands, at which point the sensor stops being the thing that blurs it.
+
+One timer drives both jobs, which is also how a game loop works: input is sampled at the start of a
+frame and the result is presented at the end. The schedule aims at an absolute deadline rather than
+adding a rounded interval each tick, so 360 fps averages 2.78 ms instead of drifting 8% on the
+3 ms rounding.
 
 ### 3. Not planned: choosing a flip model
 
@@ -764,7 +791,10 @@ already uses.
 ### 4. In-game measurement
 
 Calibrate the sensor on a repeatable in-game event — a muzzle flash — then measure click to flash
-during normal play. This is the most useful of the four and the only one that needs firmware work.
+during normal play. This is the most useful of the four, and it wants the photodiode front-end
+first: a rising edge is exactly what a comparator is for, and doing it by polling an ADC through a
+photoresistor would be fighting the hardware. It is already in the mode picker, greyed out, so the
+plan is visible rather than a surprise.
 
 What makes it harder than the desktop target:
 
@@ -780,14 +810,21 @@ What makes it harder than the desktop target:
 
 `t₀` does not change: it stays the probe contact in the same ISR, as it has since v1.0.
 
-### The sensor is now the limit
+### 5. The photodiode front-end — in progress
 
-A 360 Hz OLED settles in microseconds. The KY-018 does not — it is a photoresistor with a
-millisecond response, and at this point it is the largest unknown in the whole chain, larger than a
-frame at any refresh rate worth testing. Items 2 and 4 will both give better numbers with a fast
-photodiode (BPW34, BPV10 or similar) and a transimpedance amplifier in place of the KY-018: a few
-euro of parts, response in microseconds, and the same `A0` pin. That upgrade is worth more than any
-software change on this list.
+A 360 Hz OLED settles in microseconds. The KY-018 does not: it is a photoresistor with a millisecond
+response, and it is now the largest unknown in the whole chain, larger than a frame at any refresh
+rate worth testing.
+
+The replacement is designed: a **BPV10** into an **OPA380** transimpedance amplifier, then a
+**TLV3501** comparator whose output goes to `D3` / digital 8 — an interrupt-capable pin. `t₁` stops
+being a software threshold on a sampled ADC value and becomes a hardware interrupt, timestamped in
+an ISR exactly the way `t₀` already is. `A0` keeps the analogue output for calibration and
+telemetry, and is never read inside the timing window.
+
+**Designed, not built.** Full circuit, pinouts, decoupling and BOM:
+**[docs/optical_front_end.md](docs/optical_front_end.md)**. The KY-018 build stays the shipped,
+verified tester until this one is assembled and measured against it.
 
 ## Contributing
 
