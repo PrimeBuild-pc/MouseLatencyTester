@@ -603,6 +603,12 @@ Security issues go through
 [private reporting](https://github.com/PrimeBuild-pc/MouseLatencyTester/security/advisories/new),
 never a public issue — see [SECURITY.md](SECURITY.md).
 
+## Support the project
+
+If MouseLatencyTester is useful to you, you can support its development here:
+
+[![PayPal](https://img.shields.io/badge/Support-PayPal-0070BA?style=plastic&logo=paypal&logoColor=white)](https://paypal.me/PrimeBuildOfficial?country.x=IT&locale.x=it_IT)
+
 ## Privacy
 
 No telemetry, no analytics, no background network activity. Every measurement stays in a local
