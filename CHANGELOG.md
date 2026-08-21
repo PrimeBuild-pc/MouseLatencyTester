@@ -65,6 +65,14 @@ versioning follows [Semantic Versioning](https://semver.org/).
 - **The live tab's right-hand column scrolls.** With the optical panel showing it
   was taller than a laptop screen, which put *Enter test mode* below the bottom
   edge of the window with no way to reach it.
+- **The optical target is large and in the same place in both windows.** It was
+  a 260 px square that the calibration window and the test overlay positioned
+  differently; a sensor held on the glass with elastic bands does not hit that,
+  and both baselines then came back identical. It is now a 620 × 440 block dead
+  centre, drawn by one function that both windows call. A failed calibration
+  stays on screen with a live LIGHT reading, several times a second, so the
+  sensor can be aimed by watching the number rather than by guessing; Enter
+  retries, Esc gives up.
 - **The optical calibration happens where the measurement happens.** It used to
   sample a small swatch in the side panel, then measure against a full-screen
   target somewhere else entirely — different patch of backlight, so the

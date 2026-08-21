@@ -35,9 +35,29 @@ log = logging.getLogger(__name__)
 #: How often the optical target looks for a new OS click.  1 ms is the finest
 #: Tk offers; whatever is left is part of what click-to-photon measures.
 TARGET_POLL_MS = 1
-#: Side of the optical target, in pixels.  Big enough to aim a KY-018 at from a
-#: few centimetres without the module's own body shadowing it.
-TARGET_SIZE_PX = 260
+#: The optical target, in pixels, and where it sits on the screen.  Deliberately
+#: large: the sensor is held on the glass with elastic bands, not aligned on an
+#: optical bench, and a target you have to hit precisely is a target you miss.
+#: The calibration window and the test overlay use the *same* numbers, because a
+#: baseline is only worth anything if it comes from the patch of screen the
+#: measurement will use.
+TARGET_W_PX = 620
+TARGET_H_PX = 440
+TARGET_RELY = 0.5
+#: Where the text sits in the test overlay when the target owns the middle.
+PHOTON_TEXT_RELY = 0.17
+
+
+def place_target(parent: tk.Misc) -> tk.Label:
+    """The black/white target, centred, identical in both windows."""
+    holder = tk.Frame(parent, width=TARGET_W_PX, height=TARGET_H_PX,
+                      background="#000000")
+    holder.place(relx=0.5, rely=TARGET_RELY, anchor="center")
+    holder.pack_propagate(False)
+    target = tk.Label(holder, background="#000000", foreground="#3a3a3a",
+                      text=tr("photon.target"), font=(FONT_FAMILY, 12, "bold"))
+    target.pack(fill="both", expand=True)
+    return target
 
 
 class OpticalCalibrationWindow:
@@ -63,27 +83,34 @@ class OpticalCalibrationWindow:
         window.attributes("-topmost", True)
         window.configure(background="#0b0b0b", cursor="none")
         window.bind("<Escape>", lambda _e: self.app.cancel_optical_calibration())
+        window.bind("<Return>", lambda _e: self.app.retry_optical_calibration())
+        window.bind("<space>", lambda _e: self.app.retry_optical_calibration())
         window.protocol("WM_DELETE_WINDOW", self.app.cancel_optical_calibration)
 
-        inner = tk.Frame(window, background="#0b0b0b")
-        inner.place(relx=0.5, rely=0.5, anchor="center")
+        top = tk.Frame(window, background="#0b0b0b")
+        top.place(relx=0.5, rely=0.12, anchor="center")
 
-        self.state = tk.Label(inner, text=tr("photon.calibrating_state"),
+        self.state = tk.Label(top, text=tr("photon.calibrating_state"),
                               font=(FONT_FAMILY, 22, "bold"),
                               background="#0b0b0b", foreground="#8a8a8a")
-        self.state.pack(pady=(0, 18))
-
-        self.target_area = tk.Label(
-            inner, background="#000000", foreground="#4d4d4d",
-            text=tr("photon.target"), font=(FONT_FAMILY, 11, "bold"),
-            width=TARGET_SIZE_PX // 8, height=TARGET_SIZE_PX // 22)
-        self.target_area.pack()
-
-        self.hint = tk.Label(inner, text=tr("photon.calibrating"),
+        self.state.pack()
+        self.hint = tk.Label(top, text=tr("photon.calibrating"),
                              font=(FONT_FAMILY, 13), background="#0b0b0b",
-                             foreground="#8a8a8a", wraplength=760,
+                             foreground="#8a8a8a", wraplength=900,
                              justify="center")
-        self.hint.pack(pady=(18, 0))
+        self.hint.pack(pady=(10, 0))
+
+        self.target_area = place_target(window)
+
+        # Live reading, so aiming is not guesswork: if this number barely moves
+        # between the black and the white phase, the sensor is not on the target.
+        bottom = tk.Frame(window, background="#0b0b0b")
+        bottom.place(relx=0.5, rely=0.9, anchor="center")
+        tk.Label(bottom, text=tr("live.light"), font=(FONT_FAMILY, 12),
+                 background="#0b0b0b", foreground="#6a6a6a").pack(side="left")
+        tk.Label(bottom, textvariable=app.light_var,
+                 font=(FONT_FAMILY, 20, "bold"), background="#0b0b0b",
+                 foreground="#c8c8c8").pack(side="left", padx=(12, 0))
 
         window.focus_force()
 
@@ -102,12 +129,16 @@ class OpticalCalibrationWindow:
                 text=tr("photon.calibrating_done") if ok
                 else tr("photon.calibrating_failed"),
                 foreground="#4ade80" if ok else "#f87171")
-            self.hint.configure(text=reason)
+            self.hint.configure(
+                text=reason if ok
+                else reason + "\n\n" + tr("photon.retry_hint"))
         except tk.TclError:
             log.debug("calibration window is gone")
-        # Leave the result on screen long enough to read, then get out of the
-        # way: this window is a step, not a place to sit.
-        self.window.after(1800, self.app.cancel_optical_calibration)
+        if ok:
+            # A success is a step, not a place to sit: show it, then get out.
+            self.window.after(1800, self.app.cancel_optical_calibration)
+        # A failure stays put on purpose.  The live reading below is the only
+        # tool for aiming the sensor, and it is useless once the window closes.
 
     def _paint(self, bright: bool) -> None:
         self._target_bright = bright
@@ -191,10 +222,12 @@ class TestModeOverlay:
         self.p95 = self._label(row, f"{tr('test.p95')} —", 18, "bold", side="left")
         self.count = self._label(row, f"N 0 / {target}", 18, "bold", side="left")
 
-        if self.photon:
-            self._build_target(inner)
-
         self._label(inner, tr("test.exit"), 12, "normal", pady=(10, 0))
+
+        if self.photon:
+            # The target owns the middle of the screen, so the numbers move up.
+            inner.place_configure(rely=PHOTON_TEXT_RELY)
+            self._build_target()
 
         self.set_mode("wait")
         window.focus_force()
@@ -203,18 +236,13 @@ class TestModeOverlay:
 
     # ------------------------------------------------------------- optical --
 
-    def _build_target(self, parent: tk.Misc) -> None:
-        """The optical target.  No bindings, ever: aiming must not click."""
-        holder = tk.Frame(parent, height=TARGET_SIZE_PX + 20)
-        self.frame_children_rows.append(holder)
-        holder.pack(pady=(18, 4))
-        self.target_area = tk.Label(
-            holder, background="#000000", foreground="#4d4d4d",
-            text=tr("photon.target"), font=(FONT_FAMILY, 11, "bold"),
-            width=TARGET_SIZE_PX // 8, height=TARGET_SIZE_PX // 22)
-        self.target_area.pack()
-        self.hint_optical = self._label(parent, tr("photon.aim_hint"), 13, "normal",
-                                       pady=(4, 0))
+    def _build_target(self) -> None:
+        """The optical target.  No bindings, ever: aiming must not click.
+
+        Placed on the window rather than inside the text block, at exactly the
+        position and size the calibration window uses.
+        """
+        self.target_area = place_target(self.frame)
 
     def show_calibrating(self, bright: bool) -> None:
         """Paint the target for one calibration baseline."""

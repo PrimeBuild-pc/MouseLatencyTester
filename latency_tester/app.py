@@ -26,6 +26,8 @@ log = logging.getLogger(__name__)
 
 PUMP_INTERVAL_MS = 50
 LIGHT_POLL_MS = 1000
+#: Faster reading while the optical calibration target is showing.
+LIGHT_AIM_POLL_MS = 150
 #: How long to let the LDR settle after the target changes colour, before a
 #: baseline is sampled.  A photoresistor is slow; this is not a guess to tune
 #: away, it is the sensor's own response time.
@@ -422,6 +424,13 @@ class LatencyTesterApp:
         if not self.photon_mode:
             self.send(protocol.CMD_PHOTON_ON)
         self.root.after(300, lambda: self._photon_calibration_step(0))
+
+    def retry_optical_calibration(self) -> None:
+        """Re-run the sequence without closing the window, so the live reading
+        stays on screen while the sensor is being aimed."""
+        if self.cal_window is None:
+            return
+        self._photon_calibration_step(0)
 
     def cancel_optical_calibration(self) -> None:
         """Close the calibration window, whether it finished or was escaped."""
@@ -987,7 +996,12 @@ class LatencyTesterApp:
                 and not self.serial.calibrating):
             self.send(protocol.CMD_LIGHT)
         if self.running:
-            self._timers["light"] = self.root.after(LIGHT_POLL_MS, self._poll_light)
+            # While the optical target is on screen the reading is an aiming
+            # instrument, and once a second is too slow to see the black and
+            # white phases at all.  Safe to speed up: no measurement is running.
+            interval = (LIGHT_AIM_POLL_MS if self.cal_window is not None
+                        else LIGHT_POLL_MS)
+            self._timers["light"] = self.root.after(interval, self._poll_light)
 
     # ============================================================== shutdown ==
     def close(self) -> None:

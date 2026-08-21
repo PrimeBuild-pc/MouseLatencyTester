@@ -567,8 +567,9 @@ same target the measurement uses — a baseline sampled anywhere else describes 
 screen, with a different backlight, and is worthless.
 
 1. **Live test → Measurement mode → Probe-to-Photon.** The optical panel appears.
-2. **Aim the KY-018 at the centre of the screen**, where the full-screen target will appear. Two or
-   three centimetres away, facing it square on. Tape or clamp it so it cannot drift.
+2. **Fix the KY-018 against the middle of the screen** — elastic bands, tape, a clamp — facing it,
+   a couple of centimetres away. The target is a 620 × 440 block dead centre, so it does not need
+   precise aim; it does need the sensor not to drift afterwards.
 3. **Press *Calibrate on the full-screen target*.** A centred full-screen target appears, paints
    itself black, waits 400 ms for the photoresistor to settle, samples `A0` — that is `dark` — then
    does the same in white for `bright`, shows the result and closes itself. Do not move the sensor
@@ -576,9 +577,11 @@ screen, with a different backlight, and is worthless.
    so the baselines always come from the run that is about to happen.
 4. **The threshold is derived automatically**: the midpoint between the two. Direction is derived
    too, so a module whose ADC value *falls* as light rises works with no setting.
-5. If the two baselines are less than **60 counts** apart the overlay stops at
-   `CALIBRATION FAILED` and explains why. It never arms: a threshold inside the noise would make
-   every sample a coin toss. Press <kbd>Esc</kbd>, fix the aim or the brightness, try again.
+5. If the two baselines are less than **60 counts** apart it stops at `CALIBRATION FAILED`, reports
+   the numbers it actually measured, and **stays on screen** with a live `LIGHT` reading updating
+   several times a second. Move the sensor until that number swings properly between the black and
+   white phases, press <kbd>Enter</kbd> to retry, <kbd>Esc</kbd> to give up. It never arms on a bad
+   calibration: a threshold inside the noise would make every sample a coin toss.
 6. Otherwise the overlay hands over to the normal green/red/blue cycle with the black target in
    place. The instant Windows reports the click the target turns white; the Teensy has been sampling
    `A0` since the probe contact and stops at the first reading past the threshold.

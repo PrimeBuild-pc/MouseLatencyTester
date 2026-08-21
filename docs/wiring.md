@@ -226,8 +226,11 @@ read from the KY-018 already on `A0`. What changes is where you point the sensor
    sample; white, 400 ms settle, sample. **Do not move the sensor.** It shows
    the result and closes. About a second and a half.
 4. If the two baselines are less than **60 counts** apart it stops at
-   `CALIBRAZIONE FALLITA` and reports the numbers it actually measured. Improve
-   the shading, the aim or the screen brightness and try again.
+   `CALIBRAZIONE FALLITA`, reports the numbers it measured, and stays on screen
+   with a live `LUCE` reading. Move the sensor until that number swings between
+   the black and the white phase, then press Enter to retry or Esc to give up.
+   **If the reading barely moves, the sensor is not on the target** — that is
+   what this readout is for.
 5. **Enter test mode.** The calibration is repeated automatically, on the same
    target, so it can never be stale. Then the usual green/red/blue cycle.
 6. Press ten times and expect ten `OPT:` lines, in the tens of milliseconds.
