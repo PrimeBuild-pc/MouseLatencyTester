@@ -5,7 +5,7 @@ the archive can be exercised for development, screenshots and release testing.
 
 It deliberately does **not** emit ``TRIG``: the click handshake needs a real
 probe and a real OS click, so the demo produces finished ``LAT:`` lines
-instead.  The measurement path is therefore never exercised -- and never
+instead -- or ``OPT:`` lines once Probe-to-Photon is selected.  The measurement path is therefore never exercised -- and never
 faked -- by demo mode.  Runs saved while the demo device is attached are stored
 with ``is_demo = 1``.
 """
@@ -32,6 +32,13 @@ _SPIKE_EXTRA_MS = (3.0, 14.0)
 _INTERVAL_S = 0.45      # simulated time between presses
 _LIGHT_BASE = 620
 
+# Probe-to-Photon is slower and wider than Probe-to-PC: it carries the
+# compositor, the panel and the LDR's own response on top of the input stack.
+_OPT_BASE_MS = 24.0
+_OPT_SIGMA_MS = 3.2
+_OPT_DARK = 96
+_OPT_BRIGHT = 872
+
 
 class DemoDevice:
     """A :class:`~latency_tester.serial_service.Transport` backed by a thread."""
@@ -44,6 +51,14 @@ class DemoDevice:
 
         self._test_mode = False
         self._calibrating = False
+        self._optical = False
+        self._opt_dark = _OPT_DARK
+        self._opt_bright = _OPT_BRIGHT
+        self._opt_count = 0
+        self._opt_last = 0.0
+        self._opt_min = 0.0
+        self._opt_max = 0.0
+        self._opt_sum = 0.0
         self._sample_count = 0
         self._last = 0.0
         self._min = 0.0
@@ -97,6 +112,7 @@ class DemoDevice:
             with self._lock:
                 self._sample_count = 0
                 self._last = self._min = self._max = self._sum = 0.0
+            self._reset_optical()
             self._emit(protocol.TOK_RESET)
         elif char == protocol.CMD_LIGHT:
             self._emit(f"{protocol.PREFIX_LIGHT}{self._light()}")
@@ -112,6 +128,48 @@ class DemoDevice:
         elif char == protocol.CMD_CALIBRATE:
             self._calibrating = True
             self._emit("CALIBRATING...")
+        elif char == protocol.CMD_PHOTON_ON:
+            self._optical = True
+            self._reset_optical()
+            self._emit(protocol.TOK_PHOTON_ON)
+            self._emit_optical_cal()
+        elif char == protocol.CMD_PHOTON_OFF:
+            self._optical = False
+            self._emit(protocol.TOK_PHOTON_OFF)
+        elif char == protocol.CMD_CAL_DARK:
+            self._opt_dark = _OPT_DARK + self._random.randint(-6, 6)
+            self._emit_optical_cal()
+        elif char == protocol.CMD_CAL_BRIGHT:
+            self._opt_bright = _OPT_BRIGHT + self._random.randint(-10, 10)
+            self._emit_optical_cal()
+        elif char == protocol.CMD_CAL_REPORT:
+            self._emit_optical_cal()
+
+    def _reset_optical(self) -> None:
+        self._opt_count = 0
+        self._opt_last = self._opt_min = self._opt_max = self._opt_sum = 0.0
+
+    def _emit_optical_cal(self) -> None:
+        threshold = (self._opt_dark + self._opt_bright) // 2
+        rising = 1 if self._opt_bright > self._opt_dark else 0
+        self._emit(f"OPT_CAL:dark:{self._opt_dark},bright:{self._opt_bright},"
+                   f"threshold:{threshold},rising:{rising}")
+
+    def _emit_optical_sample(self) -> None:
+        latency = max(4.0, self._random.gauss(_OPT_BASE_MS, _OPT_SIGMA_MS))
+        with self._lock:
+            self._opt_last = latency
+            if self._opt_count == 0:
+                self._opt_min = self._opt_max = latency
+            self._opt_min = min(self._opt_min, latency)
+            self._opt_max = max(self._opt_max, latency)
+            self._opt_sum += latency
+            self._opt_count += 1
+            count, low, high = self._opt_count, self._opt_min, self._opt_max
+            avg = self._opt_sum / count
+        raw = self._opt_bright + self._random.randint(-14, 14)
+        self._emit(f"OPT:{latency:.3f},raw:{raw},min:{low:.3f},max:{high:.3f},"
+                   f"avg:{avg:.3f},n:{count}")
 
     def _light(self) -> int:
         return max(0, min(1023, _LIGHT_BASE + self._random.randint(-12, 12)))
@@ -137,6 +195,13 @@ class DemoDevice:
     def _run(self) -> None:
         while not self._closed.wait(_INTERVAL_S):
             if not self._test_mode:
+                continue
+            if self._optical:
+                self._emit_optical_sample()
+                self._emit(protocol.TOK_REARM)
+                time.sleep(0.12)
+                if self._test_mode:
+                    self._emit(protocol.TOK_ARMED)
                 continue
             latency = self._next_latency()
             with self._lock:

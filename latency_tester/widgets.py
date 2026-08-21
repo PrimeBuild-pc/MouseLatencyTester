@@ -205,3 +205,51 @@ class SampleChart(tk.Canvas):
                          anchor="nw", fill=p.fg_muted, font=(FONT_FAMILY, 8))
         self.create_text(width - pad, height - pad + 12, text=f"n={len(self._values)}",
                          anchor="ne", fill=p.fg_muted, font=(FONT_FAMILY, 8))
+
+
+def scrollable_column(parent: tk.Misc, palette: Palette) -> tuple[ttk.Frame, ttk.Frame]:
+    """A vertically scrolling container, and the frame to put content in.
+
+    Returns ``(outer, inner)``: grid or pack ``outer`` where the column goes,
+    build into ``inner``.  Needed because the right-hand column of the live tab
+    is taller than a laptop screen once the optical panel is showing, and a
+    control the user cannot reach might as well not exist.
+    """
+    outer = ttk.Frame(parent)
+    outer.rowconfigure(0, weight=1)
+    outer.columnconfigure(0, weight=1)
+
+    canvas = tk.Canvas(outer, highlightthickness=0, borderwidth=0,
+                       background=palette.bg)
+    canvas.grid(row=0, column=0, sticky="nsew")
+    bar = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+    # Always shown.  Hiding it when the content fits looks tidier and is a trap:
+    # gridding the bar shrinks the canvas, which fires <Configure>, which
+    # re-decides whether the bar is needed -- a geometry feedback loop that
+    # pegs the event loop for ever.
+    bar.grid(row=0, column=1, sticky="ns")
+    canvas.configure(yscrollcommand=bar.set)
+
+    inner = ttk.Frame(canvas)
+    window = canvas.create_window((0, 0), window=inner, anchor="nw")
+
+    def _resize(_event=None) -> None:
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        # Match the inner frame to the visible width so nothing is clipped
+        # horizontally; only vertical scrolling is wanted here.
+        canvas.itemconfigure(window, width=canvas.winfo_width())
+
+    inner.bind("<Configure>", _resize)
+    canvas.bind("<Configure>", _resize)
+
+    def _wheel(event) -> None:
+        if inner.winfo_reqheight() <= canvas.winfo_height():
+            return
+        canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+    # Bound to the canvas subtree rather than globally, so the chart and the
+    # log keep their own wheel behaviour.
+    canvas.bind_all("<MouseWheel>", lambda e: _wheel(e)
+                    if str(e.widget).startswith(str(canvas)) else None,
+                    add="+")
+    return outer, inner

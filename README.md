@@ -19,7 +19,7 @@
 <a href="pyproject.toml"><img alt="Python 3.10 or newer" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=plastic&amp;logo=python&amp;logoColor=white"></a>
 <a href="docs/installation_windows.md"><img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=plastic&amp;logo=windows&amp;logoColor=white"></a>
 <a href="#languages"><img alt="Eight UI languages" src="https://img.shields.io/badge/UI%20languages-8-a78bfa?style=plastic&amp;logo=googletranslate&amp;logoColor=white"></a>
-<a href="firmware"><img alt="Firmware 1.4" src="https://img.shields.io/badge/firmware-v1.4-fbbf24?style=plastic&amp;logo=arduino&amp;logoColor=white"></a>
+<a href="firmware"><img alt="Firmware 1.5" src="https://img.shields.io/badge/firmware-v1.5-fbbf24?style=plastic&amp;logo=arduino&amp;logoColor=white"></a>
 <a href="#hardware"><img alt="Hardware assembled and verified" src="https://img.shields.io/badge/hardware-assembled%20%26%20verified-4ade80?style=plastic"></a>
 
 <br>
@@ -135,6 +135,12 @@ Teensy — **t₁**. The calibrated serial round-trip is subtracted from `t₁ �
 The result covers switch debounce, the mouse's internal processing, the wireless or USB link, the
 polling interval and the OS input stack. It does **not** cover display or render latency.
 
+> [!IMPORTANT]
+> **The method is completely non-invasive.** The mouse is never opened, nothing is soldered to its
+> PCB, and no transistor is wired across its microswitch. The only mouse-side modification is a
+> strip of **removable** conductive copper tape on the outside of the left button. Peel it off and
+> the mouse is exactly as it was.
+
 ### Feature maturity — read this first
 
 | | Feature | Status |
@@ -142,11 +148,12 @@ polling interval and the OS input stack. It does **not** cover display or render
 | 1 | **Probe method** — the measurement above | ✅ **Working and verified on real hardware.** Every number the app produces comes from this path |
 | 2 | **OLED SH1106** | ✅ Working. Frozen during test mode so I²C traffic cannot disturb the timing |
 | 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. Recorded with each run; it plays no part in any measurement |
-| 4 | **BTN1 / BTN2 buttons** | 🧪 **Wired, firmware v1.4, test phase.** Each press emits exactly one `BTN1:PRESS` / `BTN2:PRESS`, counted and logged. **No action bound yet** |
-| 5 | 2N2222A transistor + 220 Ω | ⛔ **Not connected, not supported.** Purpose not specified; nothing here anticipates it |
-| 6 | Photoresistor / click-to-photon mode | ⛔ Does not exist and is not being faked |
+| 4 | **BTN1 / BTN2 buttons** | ✅ **Working. 10/10 acceptance test passed on hardware.** BTN1 enters/leaves test mode, BTN2 clears the live run outside test mode. Presses are still counted and logged |
+| 5 | **Probe-to-Photon mode** | 🧪 **Implemented, firmware v1.5.** Separate mode, own calibration, own metric. Accuracy is limited by the KY-018 — [read this](#probe-to-photon) before quoting a number |
+| 6 | 2N2222A transistor + 4 × 220 Ω | 🚫 **Unused / reserved.** Not used by the current validated build: not connected, no firmware, no protocol |
 
-Rows 5–6 are not implemented and no wiring for them is documented, on purpose.
+Row 6 is not wired on purpose. Row 5 needed no new wiring: the KY-018 was already on `A0` and the
+probe was already on `D2`.
 
 ---
 
@@ -320,22 +327,33 @@ reproduced without any prior context.
 | 1 | **Teensy 2.0** (ATmega32U4, 16 MHz) | Takes t₀ in an ISR, computes latency, talks to the PC | The whole measurement lives here |
 | 1 | **OLED 1.30", 128×64, SH1106, I²C, 4-pin** | Local status display | Address `0x3C`. **One** display — see note below |
 | 1 | **KY-018 photoresistor module** | `LIGHT` telemetry recorded with each run | Analog output. Not part of the measurement |
-| 2 | **Momentary push buttons** | `BTN1` / `BTN2` events | No external resistors — `INPUT_PULLUP` is used |
+| 2 | **Momentary push buttons, 4-pin** | `BTN1` / `BTN2` | Used as plain switches to GND. No external resistors — `INPUT_PULLUP` is used. **Wire diagonally** — see below |
 | 1 | **Breadboard** (400 or 830 points) | Power rails and module mounting | |
-| 1 | **Conductive copper tape**, 5 mm | Contact pad on the mouse button | Aluminium foil + tape works too |
+| 1 | **Conductive copper tape**, 5 mm | Contact pad on the **outside** of the mouse button | Removable. Aluminium foil + tape works too |
 | 1 | **Metal probe / multimeter tip** | Closes the circuit at the instant of the click | A stiff bare wire also works |
 | 1 | **Helping hands / third hand** | Holds the probe steady | Not optional in practice — probe alignment is the biggest error source |
 | — | **Jumper wires M-M and M-F** | Wiring | Both types needed |
 | — | **Solid-core wire** | Short, tidy breadboard runs | |
-| — | **Soldering iron + solder** | Permanent joints on the probe and tape | |
+| — | **Soldering iron + solder** | Permanent joints on the probe lead and the tape lead | **Never used on the mouse itself** |
 | — | **Insulating tape** | Strain relief and shorts prevention | |
 | 1 | **Micro USB cable** | Power and serial | A data cable, not charge-only |
-| 1 | 2N2222A NPN transistor | — | ⛔ **Present but NOT connected and NOT supported by the firmware** |
-| 1 | 220 Ω resistor | — | ⛔ **Present but NOT connected** |
+| 1 | 2N2222A NPN transistor | — | 🚫 **Unused / reserved — not used by the current validated build.** Not connected, not supported by the firmware |
+| 4 | 220 Ω resistors | — | 🚫 **Unused / reserved — not used by the current validated build.** Not connected |
 
 > [!NOTE]
 > An earlier version of this project's parts list mentioned *two* OLED displays as a future upgrade.
 > **The validated build uses exactly one.** A second display is not required and is not supported.
+
+> [!IMPORTANT]
+> **The 4-pin buttons are just switches.** A tactile 4-pin button has **two internal pairs**: the
+> two legs on the *same side* are permanently joined to each other. Take one leg from **one side**
+> and one from the **opposite** side — the diagonal — so that pressing actually closes the circuit.
+>
+> Wire that diagonal between the Teensy pin and **GND**, nothing else. Straddle the breadboard's
+> centre groove so the two pairs land on different rows. Check with a continuity tester: **open at
+> rest, closed when pressed.** If it beeps at rest you took two legs of the same pair, and the pin
+> sits permanently at GND — the firmware reads it as "already pressed" at boot and no press event
+> will ever appear.
 
 Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard rails.
 
@@ -355,13 +373,13 @@ Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard r
 | OLED SH1106 | `VCC` / `VDD` | `VCC` | — | 🔴 Red | Power |
 | OLED SH1106 | `SCL` / `SCK` | `D0` | **5** | 🟡 Yellow | I²C clock |
 | OLED SH1106 | `SDA` | `D1` | **6** | 🟢 Green | I²C data |
-| KY-018 | `S` | `F0` | **A0** | 🔵 Blue | Analog light level, 0–1023 |
+| KY-018 | `S` | `F0` | **A0** | 🔵 Blue | Analog light level, 0–1023. `LIGHT` telemetry **and** the Probe-to-Photon `t₁` |
 | KY-018 | `+` | `VCC` | — | 🔴 Red | Power |
 | KY-018 | `−` | `GND` | — | ⚫ Black | Ground |
-| BTN1 | leg A | `B0` | **0** | 🟠 Orange | Button input, `INPUT_PULLUP` |
-| BTN1 | leg B | `GND` | — | ⚫ Black | Pressed = LOW |
-| BTN2 | leg A | `B1` | **1** | 🟣 Purple | Button input, `INPUT_PULLUP` |
-| BTN2 | leg B | `GND` | — | ⚫ Black | Pressed = LOW |
+| BTN1 | one corner | `B0` | **0** | 🟠 Orange | Button input, `INPUT_PULLUP` |
+| BTN1 | **opposite** corner | `GND` | — | ⚫ Black | Pressed = LOW. Diagonal, never the same side |
+| BTN2 | one corner | `B1` | **1** | 🟣 Purple | Button input, `INPUT_PULLUP` |
+| BTN2 | **opposite** corner | `GND` | — | ⚫ Black | Pressed = LOW. Diagonal, never the same side |
 | Built-in LED | — | `D6` | **11** | — | Lit while a measurement is pending |
 
 > [!WARNING]
@@ -384,7 +402,7 @@ Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard r
 | 🔴 Red | VCC / ≈ 5 V |
 | 🟡 Yellow | OLED `SCL` |
 | 🟢 Green | OLED `SDA` |
-| 🔵 Blue | KY-018 analog signal |
+| 🔵 Blue | KY-018 analog signal (`LIGHT` telemetry and the Probe-to-Photon `t₁`) |
 | ⚪ White | Probe |
 | 🟠 Orange | BTN1 |
 | 🟣 Purple | BTN2 |
@@ -408,9 +426,13 @@ build agree with each other.
         :         |  D1   (6)   I2C SDA     [GRN] -+--------> OLED SDA
         :         |                                |
         :         |  F0   (A0)  analog in   [BLU] <+--------- KY-018  S
+        :         |             (t1 in Probe-to-Photon)             
         :         |                                |
         :         |  B0   (0)   BTN1 in     [ORG] <+--------- BTN1 --+
         :         |  B1   (1)   BTN2 in     [PUR] <+--------- BTN2 --+
+        :         |                                | (4-pin buttons: |
+        :         |                                |  wire DIAGONAL  |
+        :         |                                |  corners only)  |
         :         |                                |                 |
         :         |  D6   (11)  built-in LED       |                 |
         :         |                                |                 |
@@ -430,7 +452,9 @@ build agree with each other.
   Colour codes: BLK=GND  RED=VCC  YEL=SCL  GRN=SDA
                 BLU=KY-018 signal  WHT=probe  ORG=BTN1  PUR=BTN2
 
-  NOT CONNECTED: 2N2222A transistor, 220 ohm resistor.
+  UNUSED / RESERVED, not part of this build: 2N2222A transistor, 4x 220 ohm resistors.
+  Nothing is wired to the mouse other than removable copper tape on the outside
+  of the left button.
 ```
 
 ```mermaid
@@ -459,18 +483,18 @@ graph LR
     VCC -->|red · +| KY
     GND -->|black · −| KY
 
-    BTN1["BTN1"] -->|orange| B0
+    BTN1["BTN1<br/>4-pin, diagonal"] -->|orange| B0
     BTN1 -->|black| GND
-    BTN2["BTN2"] -->|purple| B1
+    BTN2["BTN2<br/>4-pin, diagonal"] -->|purple| B1
     BTN2 -->|black| GND
 
-    TRANSISTOR["2N2222A + 220 Ω<br/>NOT CONNECTED"]:::todo
+    TRANSISTOR["2N2222A + 4x 220 Ω<br/>UNUSED / RESERVED"]:::todo
 
     classDef todo fill:#2a2a2a,stroke:#b45309,stroke-dasharray: 5 4,color:#fbbf24
 ```
 
-The 2N2222A and its resistor appear only to record that they exist and are **deliberately
-unconnected**. No connection for them is invented here.
+The 2N2222A and its resistor appear only to record that they exist and are **unused by the current
+validated build**. No connection for them is invented here.
 
 </details>
 
@@ -482,16 +506,17 @@ Each step must pass before moving to the next.
 
 | # | Step | Expected result |
 |:--:|---|---|
-| 1 | **Teensy alone.** Flash, open Serial Monitor at 115200 | `LATENCY_TESTER v1.4 OLED+LDR+BTN` then `READY` |
+| 1 | **Teensy alone.** Flash, open Serial Monitor at 115200 | `LATENCY_TESTER v1.5 OLED+LDR+BTN+PHOTON` then `READY`. **The Teensy does not reset when the monitor opens**, so send `V` if the banner has already scrolled past |
 | 2 | **Probe.** Touch the probe to the copper tape | `TRIG` appears, pin-11 LED lights. Without the dashboard you then get `TIMEOUT:…` — that is correct |
 | 3 | **OLED I²C scan** | Exactly one device at `0x3C` |
 | 4 | **OLED display test** — `firmware/displayTester/` | Text on the panel; the main sketch prints `OLED_OK:0x3C` |
-| 5 | **KY-018.** Send `L` | Covered ≈ **0–20**, evening room ≈ **150–250**, phone torch ≈ **1000** |
+| 5 | **KY-018.** Send `L`, or read `LIGHT` in the Live tab | Covered ≈ **0–20**, evening room ≈ **150–250**, phone torch ≈ **1000**. If it does not move, the module is miswired |
 | 6 | **All three together** | Probe still triggers; display refreshes ~2×/s. Occasional `SKIP:OLED_REFRESH` outside test mode is normal and correct |
 | 7 | **Calibration** | `CALIB_OK:<offset>,…`. Lands near 250 µs — see the [known quirk](docs/serial_protocol.md#6-calibration-sequence) |
 | 8 | **Test mode** | Overlay appears, `TESTMODE:ON`, OLED freezes, green ⇄ red tracks `ARMED`/`REARM` |
-| 9 | **BTN1 / BTN2** | 10 presses → **exactly 10** events, no phantoms, no doubles, no repeat while held |
-| 10 | Transistor / light mode | ⛔ Not defined. Do not wire the 2N2222A |
+| 9 | **BTN1 / BTN2** | 10 presses → **exactly 10** events, no phantoms, no doubles, no repeat while held. Then BTN1 enters/leaves test mode and BTN2 clears the run outside it |
+| 10 | **Probe-to-Photon** | Aim the KY-018 at the target, calibrate black then white, and check the separation is accepted. Then 10 presses → 10 `OPT:` samples |
+| 11 | Transistor | 🚫 Nothing to do. The 2N2222A and the 220 Ω resistors stay out of the circuit |
 
 Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 
@@ -507,11 +532,96 @@ Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 - **All modules share a common GND.** Teensy, OLED, KY-018 and both buttons on the same rail.
 - **Follow the printed `S` / `+` / `−` labels on the KY-018.** Do not deduce from pin position.
 - **No external resistors on the buttons.** `INPUT_PULLUP` provides them; pull-downs break the logic.
-- **Do not assume the 2N2222A pinout.** EBC and ECB both exist depending on package and
-  manufacturer — and it is not to be wired yet regardless.
+- **Never modify the mouse.** No opening it, no soldering to its PCB, no transistor across its
+  microswitch. Removable copper tape on the outside of the button is the only mouse-side change.
+- **The 2N2222A and the 220 Ω resistor are unused/reserved** — not part of this build. If they are
+  ever used, note that EBC and ECB pinouts both exist depending on package and manufacturer, so the
+  exact part must be identified first.
 - Measured supply on USB: **≈ 4.8 V**. Both the OLED and the KY-018 are fine at that level.
 
 </details>
+
+---
+
+## Probe-to-Photon
+
+A **second, separate** measurement mode, firmware **v1.5**. Probe-to-PC is untouched by it: the
+probe ISR, the `TRIG`/`H` handshake, the serial calibration, the filters, the re-arm rules and the
+OLED freeze are byte-identical to v1.4 and v1.3.
+
+### What each mode measures
+
+| | Probe-to-PC | Probe-to-Photon |
+|---|---|---|
+| **t₀** | Probe contact on `D2` | Probe contact on `D2` — **the same ISR** |
+| **t₁** | The dashboard answers `H` over serial | The KY-018 on `A0` crosses the calibrated threshold |
+| **Covers** | Mouse + link + polling + OS input stack | The above **plus** the app, the compositor, the GPU queue and the panel |
+| **Serial round-trip subtracted** | Yes, `calibration_us` | **No** — nothing is transmitted between t₀ and t₁, so there is nothing to subtract |
+| **Typical figure** | single-digit ms | tens of ms |
+| **Status** | ✅ verified | 🧪 works, accuracy bounded by the sensor |
+
+### How a run works
+
+**You do not calibrate by hand.** The calibration happens inside the full-screen overlay, on the
+same target the measurement uses — a baseline sampled anywhere else describes a different patch of
+screen, with a different backlight, and is worthless.
+
+1. **Live test → Measurement mode → Probe-to-Photon.** The optical panel appears.
+2. **Aim the KY-018 at the centre of the screen**, where the full-screen target will appear. Two or
+   three centimetres away, facing it square on. Tape or clamp it so it cannot drift.
+3. **Press *Calibrate on the full-screen target*.** A centred full-screen target appears, paints
+   itself black, waits 400 ms for the photoresistor to settle, samples `A0` — that is `dark` — then
+   does the same in white for `bright`, shows the result and closes itself. Do not move the sensor
+   while it runs; it takes about a second and a half. **Entering test mode repeats it automatically**,
+   so the baselines always come from the run that is about to happen.
+4. **The threshold is derived automatically**: the midpoint between the two. Direction is derived
+   too, so a module whose ADC value *falls* as light rises works with no setting.
+5. If the two baselines are less than **60 counts** apart the overlay stops at
+   `CALIBRATION FAILED` and explains why. It never arms: a threshold inside the noise would make
+   every sample a coin toss. Press <kbd>Esc</kbd>, fix the aim or the brightness, try again.
+6. Otherwise the overlay hands over to the normal green/red/blue cycle with the black target in
+   place. The instant Windows reports the click the target turns white; the Teensy has been sampling
+   `A0` since the probe contact and stops at the first reading past the threshold.
+7. Each sample arrives as `OPT:<ms>,raw:<adc>,…`. `raw` is the ADC value that tripped the threshold,
+   kept per sample for debugging.
+
+There is deliberately **one** calibration button and no way to sample a baseline anywhere except a
+full-screen centred target: two readings from different parts of the screen describe different
+patches of backlight, and a threshold built from them is worthless. To check the sensor is alive
+without calibrating anything, watch the **LIGHT** field in the controls — it updates every second.
+
+Guards, all of them deliberate: the target is a **plain label with no bindings**, so aiming the
+sensor can never produce a click; a press with no calibration is refused with `OPT_ERR:NO_CAL`; a
+target that is already white at t₀ is refused with `OPT_ERR:NOT_DARK` instead of returning a
+near-zero time; and no transition inside **400 ms** ends in `OPT_TIMEOUT` rather than a hung
+firmware.
+
+### Read this before quoting a Probe-to-Photon number
+
+> [!WARNING]
+> **The KY-018 is a photoresistor, not an instrument.** A CdS cell's own response time is in the
+> **milliseconds** — the same order of magnitude as the thing being measured — and it drifts with
+> temperature and ambient light. Its contribution is inside every figure this mode reports and
+> cannot be calibrated out.
+>
+> Use Probe-to-Photon to compare **one setup against itself**: same room, same panel, same sensor
+> position, one variable changed. Do **not** publish the absolute value as a click-to-photon
+> benchmark, and do not compare it against someone else's. Precision work needs a fast photodiode
+> with a transimpedance amplifier.
+
+Two smaller contributors, named so they are not mistaken for sensor error:
+
+- **The dashboard's own repaint is inside the measurement.** The target is flipped by a 1 ms Tk
+  poll, because touching a widget from the input-listener thread is not safe. That is honest —
+  click-to-photon measures everything up to the photons, the application included — but it is
+  a floor the method cannot go below.
+- **The ADC runs faster in this mode.** The prescaler goes from /128 to /16 while the optical mode
+  is active, so a reading costs ~13 µs instead of ~112 µs. It trades a little absolute accuracy for
+  finer timing, which is the right way round for a threshold crossing.
+
+Both modes are archived side by side and can be compared, but a comparison that **mixes** them says
+so in the Compare tab: they do not measure the same interval, so a delta between them is not a
+like-for-like figure.
 
 ---
 
@@ -523,7 +633,8 @@ Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 | `latency_tester_oled_ldr/` | v1.1 — adds OLED + KY-018 |
 | `latency_tester_oled_ldr_v1_2/` | v1.2 — adds `SKIP:OLED_REFRESH` |
 | `latency_tester_oled_ldr_v1_3/` | v1.3 — debounce/re-arm, test mode, OLED freeze. **Measurement baseline** |
-| **`latency_tester_oled_ldr_v1_4/`** | **v1.4 — current. v1.3 plus BTN1/BTN2 test events. Measurement path byte-identical to v1.3** |
+| `latency_tester_oled_ldr_v1_4/` | v1.4 — v1.3 plus BTN1/BTN2 events. Measurement path byte-identical to v1.3 |
+| **`latency_tester_photon_v1_5/`** | **v1.5 — current. v1.4 plus Probe-to-Photon. The Probe-to-PC path is byte-identical to v1.4** |
 | `displayTester/` | Standalone OLED check |
 
 Older sketches still work; unknown tokens are logged, never dropped. Compatibility table in
@@ -535,13 +646,14 @@ Older sketches still work; unknown tokens are logged, never dropped. Compatibili
 
 ```
 latency_tester/          the dashboard, as a package
-  protocol.py            wire format: tokens, parsing        (no GUI, no serial)
+  protocol.py            wire format, both modes, optical threshold maths
+  constants.py           choice lists and the two measurement-mode ids
   stats.py               percentiles, MAD, outliers, deltas  (pure functions)
   database.py            SQLite archive + schema migrations
   serial_service.py      reader thread, TRIG/click association
   devices.py             mouse identification + report-rate measurement
   updater.py             checksum-verified one-click update
-  demo.py                simulated Teensy
+  demo.py                simulated Teensy, both measurement modes
   settings.py            persisted preferences
   i18n.py                translation loader
   locales/               one JSON file per language
@@ -550,7 +662,7 @@ latency_tester/          the dashboard, as a package
   export.py              CSV
   app.py                 shell, state, event pump
   views/                 live · sessions · compare · devices · preferences · testmode
-firmware/                Arduino sketches, v1.0 → v1.4
+firmware/                Arduino sketches, v1.0 → v1.5
 packaging/               PyInstaller spec, Inno Setup script, build script
 tests/                   pytest suite
 docs/                    protocol, install, bring-up, first test, troubleshooting
@@ -566,7 +678,7 @@ pip install -r requirements-dev.txt
 python -m pytest tests -q
 ```
 
-**246 tests**, **87% coverage of the non-GUI code** — the GUI is deliberately excluded rather than
+**293 tests**, **88% coverage of the non-GUI code** — the GUI is deliberately excluded rather than
 padded with tests that assert nothing. CI enforces the coverage floor, so the badge cannot drift
 down silently.
 
@@ -578,6 +690,15 @@ rules and the polling-rate formula, the TRIG↔click association, and the demo d
 `tests/test_button_debounce.py` mirrors `serviceButtons()` / `flushButtonEvents()` from the v1.4
 sketch line for line, so the bench acceptance rules are checked in CI. It is a **mirror, not an
 import**: if the `.ino` changes, change the test too.
+
+`tests/test_button_actions.py` is the opposite: it calls the dashboard's real button dispatcher on a
+stub, so the refusal rules (disconnected, calibrating, `BTN2` during test mode, the confirmation
+preference) are checked without needing a window.
+
+`tests/test_photon.py` covers Probe-to-Photon end to end short of the hardware: the `OPT:` wire
+format and that it can never decode as a `LAT:` one, the threshold maths including a sensor whose
+value falls with light, the refusal when the two baselines are too close, and the schema-3
+migration of an existing archive.
 
 ### Building the installer
 

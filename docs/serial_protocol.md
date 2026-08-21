@@ -36,12 +36,13 @@ The firmware does **not** transmit a numeric protocol version. It prints a
 banner instead, and that banner is the compatibility signal:
 
 ```
-LATENCY_TESTER v1.4 OLED+LDR+BTN
+LATENCY_TESTER v1.5 OLED+LDR+BTN+PHOTON
 ```
 
 The dashboard parses the `vX.Y` from any line starting with `LATENCY_TESTER`
-and shows it in the connection bar. `PROTOCOL_VERSION = 1` in `protocol.py` is
+and shows it in the connection bar. `PROTOCOL_VERSION = 2` in `protocol.py` is
 the revision of *this document*; it is bumped only if the wire format changes.
+Version 1 was v1.0-v1.4; version 2 adds the Probe-to-Photon tokens.
 
 **Backwards compatibility rule:** older firmware simply never sends the newer
 tokens. `v1.0` has no `LIGHT:`, `v1.2` has no `ARMED`/`REARM`/`TESTMODE:*`.
@@ -50,15 +51,16 @@ firmware change is required to use this dashboard.
 
 ### Token availability by firmware version
 
-| Token / command | v1.0 | v1.1 | v1.2 | v1.3 | v1.4 |
-|---|:--:|:--:|:--:|:--:|:--:|
-| `TRIG`, `H`, `X`, `LAT:`, `STATS:`, `CALIB_OK:`, `RESET`, `READY` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `C` `R` `S` `V` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `LIGHT:` / `L` | — | ✅ | ✅ | ✅ | ✅ |
-| `SKIP:OLED_REFRESH` | — | — | ✅ | ✅ | ✅ |
-| `ARMED`, `REARM`, `ABORT:NO_CLICK`, `DROP:OUT_OF_RANGE:` | — | — | — | ✅ | ✅ |
-| `TESTMODE:ON` / `TESTMODE:OFF` / `T` `E` | — | — | — | ✅ | ✅ |
-| `BTN1:PRESS` / `BTN2:PRESS` | — | — | — | — | ✅ |
+| Token / command | v1.0 | v1.1 | v1.2 | v1.3 | v1.4 | v1.5 |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| `TRIG`, `H`, `X`, `LAT:`, `STATS:`, `CALIB_OK:`, `RESET`, `READY` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `C` `R` `S` `V` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `LIGHT:` / `L` | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `SKIP:OLED_REFRESH` | — | — | ✅ | ✅ | ✅ | ✅ |
+| `ARMED`, `REARM`, `ABORT:NO_CLICK`, `DROP:OUT_OF_RANGE:` | — | — | — | ✅ | ✅ | ✅ |
+| `TESTMODE:ON` / `TESTMODE:OFF` / `T` `E` | — | — | — | ✅ | ✅ | ✅ |
+| `BTN1:PRESS` / `BTN2:PRESS` | — | — | — | — | ✅ | ✅ |
+| `OPT:`, `OPT_CAL:`, `OPT_ERR:`, `OPT_TIMEOUT`, `PHOTON:*` / `O` `N` `D` `W` `K` | — | — | — | — | — | ✅ |
 
 ---
 
@@ -76,6 +78,22 @@ measurement or a calibration (`measurementActive == false`).
 | `T` | test mode on | Freezes the OLED, replies `TESTMODE:ON` then `ARMED` or `REARM` |
 | `E` | test mode off | Resumes the OLED, replies `TESTMODE:OFF` |
 | `L` | light | Replies `LIGHT:<0..1023>` |
+
+Probe-to-Photon, firmware **v1.5+**. Older firmware ignores all five through its
+`default:` branch, so a newer dashboard on older firmware degrades to
+Probe-to-PC instead of misbehaving.
+
+| Byte | Name | Effect |
+|---|---|---|
+| `O` | photon on | Selects the optical path, raises the ADC clock, clears the optical counters. Replies `PHOTON:ON` then `OPT_CAL:…` |
+| `N` | photon off | Back to Probe-to-PC, restores the ADC clock. Replies `PHOTON:OFF` |
+| `D` | calibrate dark | Samples `A0` as the black baseline, replies `OPT_CAL:…` |
+| `W` | calibrate bright | Samples `A0` as the white baseline, replies `OPT_CAL:…` |
+| `K` | report calibration | Replies `OPT_CAL:…` without changing anything |
+
+Selecting the mode is always allowed; **measuring** without a usable calibration
+is what gets refused. The dashboard sends `T` first and `O` second, so the OLED
+is already frozen before the optical path is armed.
 
 Two bytes are **replies inside an exchange**, not standalone commands:
 
@@ -112,8 +130,8 @@ Two bytes are **replies inside an exchange**, not standalone commands:
 
 | Line | Meaning |
 |---|---|
-| `LATENCY_TESTER v1.4 OLED+LDR+BTN` | Boot banner |
-| `LATENCY_TESTER v1.4 - Probe + OLED + KY-018 + Buttons` | Reply to `V` |
+| `LATENCY_TESTER v1.5 OLED+LDR+BTN+PHOTON` | Boot banner |
+| `LATENCY_TESTER v1.5 - Probe + OLED + KY-018 + Buttons + Photon` | Reply to `V` |
 | `READY` | Idle |
 | `RESET` | Counters cleared |
 | `OLED_OK:0x3C` / `OLED_FAIL` | Display init result |
@@ -132,6 +150,28 @@ Two bytes are **replies inside an exchange**, not standalone commands:
 Parsed by the dashboard with `^BTN(\d+):([A-Z_]+)$`, so a future
 `BTN1:RELEASE` or `BTN2:LONG_PRESS` needs no dashboard change. See
 [§10](#10-buttons--firmware-v14).
+
+### Probe-to-Photon (firmware v1.5+)
+
+| Line | Meaning |
+|---|---|
+| `PHOTON:ON` / `PHOTON:OFF` | Optical path selected / released |
+| `OPT_CAL:dark:<n>,bright:<n>,threshold:<n>,rising:<0\|1>` | The stored optical calibration. `rising` is `0` when the module's ADC value *falls* as light rises |
+| `OPT:<ms>,raw:<adc>,min:<ms>,max:<ms>,avg:<ms>,n:<count>` | Valid optical sample. `raw` is the reading that crossed the threshold |
+| `OPT_TIMEOUT` | No transition within 400 ms of t₀ |
+| `OPT_ERR:NO_CAL` | A press arrived with no usable calibration |
+| `OPT_ERR:NOT_DARK` | The sensor was already past the threshold at t₀ |
+| `OPT_ERR:SEPARATION` | `D`/`W` produced baselines less than 60 counts apart |
+| `OPT_DROP:OUT_OF_RANGE:<ms>` | Sample outside `[0.5 ms, 350 ms]`, discarded by the firmware |
+
+`OPT:` is a **different token from `LAT:` on purpose.** The two modes do not
+measure the same interval, and a parser that treated them alike would let an
+optical sample into a Probe-to-PC mean. The optical statistics are kept in
+separate firmware variables for the same reason.
+
+**Nothing is transmitted between t₀ and t₁ in this mode**, so `calibOffset` — the
+serial round-trip — is **not** subtracted from an optical latency. There is no
+round-trip to subtract.
 
 ### Calibration
 
@@ -294,22 +334,24 @@ block, the two button functions, `setup()`, the two version strings, and two
 added lines in `loop()`. `probeISR()`, the measurement block, `runCalibration()`
 and `serviceProbeRearm()` are untouched.
 
-### Current semantics: none
+### Firmware semantics: still none
 
-In v1.4 the buttons **change no firmware state**. They emit an event; the
-dashboard counts it and logs it. This is deliberate — the hardware is being
-verified first.
+The buttons **change no firmware state**, in v1.4 and by design. They emit an
+event; every decision happens on the PC.
 
-**Acceptance test:** 10 slow presses of a button must produce exactly 10
-events, with no phantom events, no doubles, no repeat while held, and no effect
-on a normal mouse measurement.
+**Acceptance test** (passed on hardware): 10 slow presses of a button produce
+exactly 10 events, with no phantom events, no doubles, no repeat while held,
+and no effect on a normal mouse measurement.
 
-### Planned semantics, after the hardware passes
+### Dashboard semantics
 
-| Button | Intended action |
+| Button | Action |
 |---|---|
-| `BTN1` | **Request** enter/exit test mode |
-| `BTN2` | Reset the live run, only while **not** in test mode |
+| `BTN1` | Enter / leave test mode |
+| `BTN2` | Clear the live run, only while **not** in test mode |
+
+A press is **refused** — logged, never obeyed — while disconnected, while
+calibrating, and for `BTN2` while test mode is running.
 
 The firmware reports; the **dashboard decides**. It stays the authority on
 session state, so a button press during a measurement or during test mode is
@@ -321,8 +363,60 @@ is planned.
 
 ## 11. Not implemented
 
-* **2N2222A transistor and its 220 Ω resistor** — physically present, **not
-  connected**, no protocol, no firmware, no measurement mode. Their purpose has
-  not been specified and nothing in this codebase anticipates them.
-* **Any photoresistor-based measurement mode** (click-to-photon or otherwise).
-  The KY-018 provides the `LIGHT` telemetry value and nothing else.
+* **2N2222A transistor and its 220 Ω resistor** — **unused / reserved**, not
+  used by the current validated build: not connected, no protocol, no firmware,
+  no measurement mode.
+* **Probe-to-Photon mode** — specified, **not implemented**. No command byte, no
+  result token and no calibration exchange exist for it yet. Today the KY-018
+  provides the `LIGHT` telemetry value and nothing else.
+
+  The design is fixed (see
+  [README → Planned — Probe-to-Photon mode](../README.md#planned--probe-to-photon-mode)):
+  `t₀` is the same probe contact on `D2` as the Probe-to-PC path, `t₁` is the
+  first `A0` sample past a calibrated threshold, and latency is `t₁ − t₀`. It
+  will be a **separate mode** with its own commands and its own stored metric —
+  results are never mixed with Probe-to-PC — and it may not alter `probeISR()`
+  or the existing measurement block. The KY-018 is a prototype-grade LDR whose
+  response time is itself in the milliseconds, so this mode is a relative
+  indicator rather than a precision click-to-photon benchmark.
+
+## 12. Probe-to-Photon sequence
+
+```
+Teensy                                  PC (dashboard)
+  |                                          |
+  |<--------------- "T" then "O" ------------|  OLED frozen, then optical armed
+  |---------- "PHOTON:ON", "OPT_CAL:..." --->|
+  |                                          |
+  |-- probe falls LOW -> ISR: t0 = micros()  |
+  |                                          |
+  |   NOTHING IS TRANSMITTED HERE.           |
+  |   analogRead(A0) in a tight loop.        |
+  |                                          |-- Windows reports the click
+  |                                          |-- target area repainted WHITE
+  |   first sample past the threshold        |
+  |   -> t1 = micros()   TIMING STOPS        |
+  |                                          |
+  |------------- "OPT:<ms>,raw:<adc>,..." -->|
+  |------------------ "REARM" -------------->|-- target area repainted BLACK
+  |------------------ "ARMED" -------------->|
+```
+
+The PC is never asked for anything during the measurement: it flips its own
+target because Windows told it about the click, and the Teensy finds out by
+looking at the light. That is why no round-trip offset is subtracted here.
+
+**The dashboard's repaint is inside the measured interval**, and so is the 1 ms
+poll that triggers it — touching a Tk widget from the input-listener thread is
+not safe, so the flip cannot be done in the callback. This is not hidden: a
+click-to-photon measurement legitimately includes the application, and this one
+is honest about where its floor comes from.
+
+---
+
+## 13. Never in scope: modifying the mouse
+
+The mouse is never opened, nothing is soldered to its PCB, and no transistor is
+wired across its microswitch. `t₀` comes from a probe touching **removable**
+conductive copper tape on the outside of the left button. Any future mode,
+Probe-to-Photon included, keeps that constraint.

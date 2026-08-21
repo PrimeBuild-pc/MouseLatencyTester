@@ -53,7 +53,7 @@ body:
     attributes:
       label: Firmware version
       description: Shown in the connection bar.
-      placeholder: "v1.4"
+      placeholder: "v1.5"
 
   - type: input
     id: os

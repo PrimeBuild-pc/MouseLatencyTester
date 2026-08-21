@@ -11,7 +11,7 @@
 
 ## Steps
 
-1. Open `firmware/latency_tester_oled_ldr_v1_4/latency_tester_oled_ldr_v1_4.ino`.
+1. Open `firmware/latency_tester_photon_v1_5/latency_tester_photon_v1_5.ino`.
 2. *Tools → Board →* **Teensy 2.0**.
 3. *Tools → USB Type →* **Serial** (or *Serial + Keyboard + Mouse + Joystick* —
    both work; only the serial endpoint is used).
@@ -24,10 +24,17 @@
 Open the Arduino Serial Monitor at `115200` baud. You should see:
 
 ```
-LATENCY_TESTER v1.4 OLED+LDR+BTN
+LATENCY_TESTER v1.5 OLED+LDR+BTN+PHOTON
 READY
 OLED_OK:0x3C
 ```
+
+> [!IMPORTANT]
+> **A Teensy does not reset when the Serial Monitor opens.** The banner is
+> printed once at power-on, so an empty monitor is normal and proves nothing.
+> Type `V` and press Enter — the reply is what tells you the flash worked. If
+> nothing comes back at all, something else is holding the COM port (usually the
+> dashboard, or another Serial Monitor).
 
 Press BTN1 and BTN2 once each; you should see exactly one line per press:
 
@@ -53,7 +60,8 @@ can own the COM port.
 | `latency_tester_oled_ldr/` | v1.1 — adds OLED + KY-018 |
 | `latency_tester_oled_ldr_v1_2/` | v1.2 — adds `SKIP:OLED_REFRESH` |
 | `latency_tester_oled_ldr_v1_3/` | v1.3 — debounce/re-arm, no duplicate triggers, OLED frozen during test mode. **Measurement baseline** |
-| **`latency_tester_oled_ldr_v1_4/`** | **v1.4 — current. v1.3 plus the BTN1/BTN2 test events. The measurement path is byte-identical to v1.3** |
+| `latency_tester_oled_ldr_v1_4/` | v1.4 — v1.3 plus the BTN1/BTN2 events. The measurement path is byte-identical to v1.3 |
+| **`latency_tester_photon_v1_5/`** | **v1.5 — current. v1.4 plus Probe-to-Photon. The Probe-to-PC path is byte-identical to v1.4** |
 | `displayTester/` | standalone OLED check |
 
 Older sketches are kept for reference and still work with this dashboard; see

@@ -4,6 +4,98 @@ All notable changes to this project are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/);
 versioning follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-08-21
+
+### Added — a second way to measure
+
+- **Probe-to-Photon.** A separate measurement mode, firmware **v1.5**. `t₀` is
+  the same probe contact on `D2`, taken in the same ISR; `t₁` is the first
+  KY-018 reading past a calibrated threshold. The dashboard's test mode shows a
+  black target area that turns white the instant Windows reports the click, and
+  the Teensy times the gap. Nothing is transmitted between t₀ and t₁, so the
+  serial round-trip offset is **not** subtracted — there is no round-trip.
+- **Optical calibration, automatic and in the right place.** Entering test mode
+  in this mode calibrates first, inside the full-screen overlay, on the same
+  target the measurement uses: black, settle, sample, white, settle, sample.
+  A baseline taken anywhere else on the screen describes a different patch of
+  backlight and is worthless, so it is not left to the operator to get right.
+  The threshold is the midpoint and the direction is derived, so a module whose
+  ADC value falls as light rises works with no setting. Baselines closer than
+  60 ADC counts stop the run before it arms — a threshold inside the noise would
+  make every sample a coin toss. Each reading is taken 400 ms after the target
+  changes colour, because a photoresistor does not settle instantly. The side
+  panel keeps manual black/white buttons as a bench check on the sensor.
+- **The two modes never mix.** Different wire token (`OPT:` vs `LAT:`),
+  different firmware statistics, `runs.mode` in the archive, and a warning in
+  the Compare tab when a comparison spans both. They do not measure the same
+  interval and the interface never pretends otherwise.
+- **Schema v3.** `runs.mode`, `runs.optical_dark`, `runs.optical_bright`,
+  `runs.optical_threshold` and `samples.raw_optical`, added in place. Existing
+  runs read as `probe_to_pc`, which is what they are: it was the only mode that
+  existed when they were written.
+- **The demo device speaks both modes**, so the whole optical flow — calibration,
+  target, samples, archive — can be exercised with no hardware attached.
+
+### Honest about the sensor
+
+- The KY-018 is a photoresistor. Its own response time is in the milliseconds,
+  the same order as the quantity being measured, and it drifts with ambient
+  light and temperature. Probe-to-Photon is documented as a **relative**
+  indicator — one setup against itself — and explicitly **not** as an absolute
+  click-to-photon benchmark. The dashboard says so in the optical panel, not
+  only in the README.
+- The dashboard's own repaint is inside the measured interval, driven by a 1 ms
+  poll because touching a Tk widget from the input-listener thread is not safe.
+  Documented rather than hidden: click-to-photon includes the application.
+- The ADC prescaler goes from /128 to /16 while the optical mode is active
+  (~13 µs per reading instead of ~112 µs), trading a little absolute accuracy
+  for finer timing — the right way round for a threshold crossing.
+
+### Added — buttons that do something
+
+- **BTN1 / BTN2 now do something.** The 10-press hardware acceptance test
+  passed, so the buttons are bound: `BTN1` enters and leaves test mode, `BTN2`
+  clears the live run while test mode is **not** running. Entirely
+  dashboard-side — the firmware is unchanged and still only *reports* the press,
+  so the dashboard stays the authority on session state and refuses a press that
+  would disturb a run (disconnected, calibrating, or `BTN2` during test mode).
+
+### Fixed
+
+- **The live tab's right-hand column scrolls.** With the optical panel showing it
+  was taller than a laptop screen, which put *Enter test mode* below the bottom
+  edge of the window with no way to reach it.
+- **The optical calibration happens where the measurement happens.** It used to
+  sample a small swatch in the side panel, then measure against a full-screen
+  target somewhere else entirely — different patch of backlight, so the
+  threshold described the wrong thing. There is now one button, it opens a
+  centred full-screen target, and entering test mode repeats the calibration on
+  that same target. The per-baseline buttons are gone: they only offered a way
+  to get it wrong.
+- **A failed calibration reports the numbers it measured**, not just the limit
+  it missed — "dark 214, bright 226, 12 counts apart, at least 60 needed" tells
+  you whether the setup is nearly right or nowhere near.
+- **"Access denied" on the COM port at startup.** Two causes, both addressed:
+  the serial reader thread is now joined when the port is closed, so Windows has
+  really released the handle before the process exits; and the automatic
+  connection at startup retries quietly instead of greeting the user with a
+  modal error. A connection the *user* asks for still reports its errors.
+
+### Preserved
+
+- The Probe-to-PC path in the v1.5 sketch is **byte-identical** to v1.4 and
+  v1.3: `probeISR()`, the t₀/t₁ block, the `TRIG`/`H` handshake,
+  `runCalibration()`, `serviceProbeRearm()`, every filter and the OLED freeze.
+  The diff from v1.4 removes six lines: three version strings, one comment, the
+  `if (probeFlag)` that became `} else if (probeFlag)`, and the OLED refresh
+  guard that now also checks the optical mode. Everything else is an addition.
+- The 2N2222A and the 220 Ω resistors remain **unused and unwired**, and the
+  mouse remains untouched: no opening it, no soldering to its PCB, no transistor
+  across its microswitch. Removable copper tape on the outside of the button is
+  still the only mouse-side modification, in this mode as in the other.
+
+---
+
 ## [1.1.0] — 2026-08-19
 
 ### Added — knowing which mouse is plugged in
@@ -152,11 +244,11 @@ exactly as in the last known-good internal build.
 
 ### Not implemented
 
-- Physical button *behaviour* (BTN1 = test mode, BTN2 = reset the live run) —
-  planned, gated on the 10-press hardware acceptance test.
-- 2N2222A transistor and its 220 Ω resistor — physically present, deliberately
-  **not connected**, no firmware, no protocol, purpose not specified.
-- Any photoresistor-based measurement mode — does not exist.
+- 2N2222A transistor and its 220 Ω resistor — **unused / reserved**, not used by
+  the current validated build: not connected, no firmware, no protocol.
+- **Probe-to-Photon mode** — specified, not implemented. Design recorded in the
+  README; no firmware, no protocol token, no UI. It will be a separate mode from
+  Probe-to-PC and will not alter the existing timing path.
 
 ---
 

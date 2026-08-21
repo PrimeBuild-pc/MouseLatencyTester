@@ -2,7 +2,7 @@ Latency Tester is installed.
 
 WHAT WAS INSTALLED
   LatencyTester.exe   the dashboard
-  firmware\           Arduino sketches, v1.0 to v1.4 (flash v1.4)
+  firmware\           Arduino sketches, v1.0 to v1.5 (flash v1.5)
   docs\               protocol reference, wiring, bring-up, troubleshooting
 
 FIRST RUN, WITHOUT HARDWARE

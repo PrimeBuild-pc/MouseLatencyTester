@@ -11,12 +11,13 @@ import threading
 from typing import TYPE_CHECKING
 
 from .. import devices as hardware
-from ..constants import CONNECTION_MODES, POLLING_RATES
+from ..constants import (CONNECTION_MODES, MODE_PHOTON, MODE_PROBE_PC,
+                         POLLING_RATES)
 from ..i18n import translator as tr
 from ..protocol import CMD_LIGHT, CMD_STATS
 from ..theme import FONT_FAMILY, MONO_FAMILY
 from ..widgets import (SampleChart, attach_tooltip, form_row, info_row,
-                       metric_card)
+                       metric_card, scrollable_column)
 
 if TYPE_CHECKING:
     from ..app import LatencyTesterApp
@@ -47,20 +48,25 @@ class LiveView(ttk.Frame):
         self.rowconfigure(0, weight=1)
 
         left = ttk.Frame(self)
-        right = ttk.Frame(self)
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        right.grid(row=0, column=1, sticky="nsew")
         left.rowconfigure(1, weight=1)
         left.columnconfigure(0, weight=1)
-        right.rowconfigure(3, weight=1)
+
+        # The right column is taller than a laptop screen once the optical
+        # panel is showing, so it scrolls.  Before this, "Enter test mode" could
+        # sit below the bottom of the window with no way to reach it.
+        column, right = scrollable_column(self, palette)
+        column.grid(row=0, column=1, sticky="nsew")
         right.columnconfigure(0, weight=1)
 
         self._build_metrics(left, palette)
         self._build_chart(left, palette)
+        self._build_mode(right, palette)
         self._build_config(right, palette)
         self._build_controls(right, palette)
         self._build_run_actions(right, palette)
         self._build_log(right)
+        self.refresh_mode()
 
     # --------------------------------------------------------------- panels --
     def _build_metrics(self, parent: ttk.Frame, palette) -> None:
@@ -96,9 +102,64 @@ class LiveView(ttk.Frame):
         self.chart = SampleChart(box, palette, empty_text=tr("live.no_samples"))
         self.chart.pack(fill="both", expand=True)
 
+    def _build_mode(self, parent: ttk.Frame, palette) -> None:
+        """Measurement-mode selector plus the optical calibration it needs."""
+        box = ttk.LabelFrame(parent, text=f" {tr('mode.title')} ", padding=12)
+        box.grid(row=0, column=0, sticky="ew")
+        box.columnconfigure(0, weight=1)
+
+        picker = ttk.Frame(box)
+        picker.grid(row=0, column=0, sticky="ew")
+        for column, mode in enumerate((MODE_PROBE_PC, MODE_PHOTON)):
+            radio = ttk.Radiobutton(
+                picker, text=tr(f"mode.{mode}"), value=mode,
+                variable=self.app.measure_mode_var,
+                command=lambda m=mode: self.app.set_measurement_mode(m))
+            radio.grid(row=0, column=column, sticky="w", padx=(0, 18))
+            attach_tooltip(radio, tr(f"tip.{mode}"), palette)
+
+        # Everything below is Probe-to-Photon only and is hidden otherwise.
+        self.photon_box = ttk.Frame(box)
+        self.photon_box.grid(row=1, column=0, sticky="ew", pady=(12, 0))
+        self.photon_box.columnconfigure(1, weight=1)
+
+        ttk.Label(self.photon_box, text=tr("photon.step_aim"), wraplength=340,
+                  justify="left", style="Muted.TLabel").grid(
+            row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+
+        self.calibrate_btn = ttk.Button(
+            self.photon_box, text=tr("photon.calibrate"),
+            style="Accent.TButton", command=self.app.calibrate_optical)
+        self.calibrate_btn.grid(row=2, column=0, columnspan=2, sticky="ew",
+                                ipady=4)
+        attach_tooltip(self.calibrate_btn, tr("tip.calibrate_optical"), palette)
+
+        values = ttk.Frame(self.photon_box)
+        values.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        values.columnconfigure(1, weight=1)
+        info_row(values, 0, tr("photon.dark"), self.app.opt_dark_var)
+        info_row(values, 1, tr("photon.bright"), self.app.opt_bright_var)
+        info_row(values, 2, tr("photon.threshold"), self.app.opt_threshold_var,
+                 tr("tip.threshold"), palette)
+
+        ttk.Label(self.photon_box, textvariable=self.app.opt_status_var,
+                  wraplength=340, justify="left", style="Warn.TLabel").grid(
+            row=4, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        ttk.Label(self.photon_box, text=tr("photon.ldr_warning"), wraplength=340,
+                  justify="left", style="Muted.TLabel").grid(
+            row=5, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+
+    def refresh_mode(self) -> None:
+        """Show the optical panel only in Probe-to-Photon."""
+        if self.app.photon_mode:
+            self.photon_box.grid()
+            self.app.opt_status_var.set(self.app.optical_ready()[1])
+        else:
+            self.photon_box.grid_remove()
+
     def _build_config(self, parent: ttk.Frame, palette) -> None:
         box = ttk.LabelFrame(parent, text=f" {tr('live.config')} ", padding=12)
-        box.grid(row=0, column=0, sticky="ew")
+        box.grid(row=1, column=0, sticky="ew", pady=(10, 0))
         box.columnconfigure(1, weight=1)
 
         self.device_combo = ttk.Combobox(box, textvariable=self.app.device_var,
@@ -155,7 +216,7 @@ class LiveView(ttk.Frame):
 
     def _build_controls(self, parent: ttk.Frame, palette) -> None:
         box = ttk.LabelFrame(parent, text=f" {tr('live.controls')} ", padding=12)
-        box.grid(row=1, column=0, sticky="ew", pady=(10, 0))
+        box.grid(row=2, column=0, sticky="ew", pady=(10, 0))
 
         info = ttk.Frame(box)
         info.pack(fill="x", pady=(0, 10))
@@ -201,7 +262,7 @@ class LiveView(ttk.Frame):
 
     def _build_run_actions(self, parent: ttk.Frame, palette) -> None:
         box = ttk.LabelFrame(parent, text=f" {tr('live.current_run')} ", padding=12)
-        box.grid(row=2, column=0, sticky="ew", pady=(10, 0))
+        box.grid(row=3, column=0, sticky="ew", pady=(10, 0))
         row = ttk.Frame(box)
         row.pack(fill="x")
         row.columnconfigure(0, weight=1)
@@ -216,7 +277,7 @@ class LiveView(ttk.Frame):
 
     def _build_log(self, parent: ttk.Frame) -> None:
         box = ttk.LabelFrame(parent, text=f" {tr('live.events')} ", padding=8)
-        box.grid(row=3, column=0, sticky="nsew", pady=(10, 0))
+        box.grid(row=4, column=0, sticky="nsew", pady=(10, 0))
         palette = self.app.palette
         holder = ttk.Frame(box)
         holder.pack(fill="both", expand=True)
@@ -286,7 +347,7 @@ class LiveView(ttk.Frame):
     def set_connected(self, connected: bool) -> None:
         state = "normal" if connected else "disabled"
         for button in (self.cal_btn, self.reset_btn, self.stats_btn,
-                       self.light_btn, self.test_btn):
+                       self.light_btn, self.test_btn, self.calibrate_btn):
             button.configure(state=state)
 
     def get_notes(self) -> str:

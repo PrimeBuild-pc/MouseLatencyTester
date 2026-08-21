@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from typing import TYPE_CHECKING
 
+from ..constants import MODE_PHOTON
+from ..database import run_mode
 from ..i18n import translator as tr
 from ..stats import compute_stats, delta, fmt_delta, fmt_ms
 from ..theme import series_style, style_axes, style_figure
@@ -202,7 +204,14 @@ class CompareView(ttk.Frame):
         bits = [run["device_name"], run["name"]]
         if run["polling_rate_hz"]:
             bits.append(f"{run['polling_rate_hz']} Hz")
+        # The mode is part of the identity of a run, not a detail: two runs from
+        # different modes measure different things and must never look alike.
+        if run_mode(run) == MODE_PHOTON:
+            bits.append(tr("mode.short_photon"))
         return " — ".join(bits)
+
+    def _mixed_modes(self, series: list[tuple]) -> bool:
+        return len({run_mode(entry[0]) for entry in series}) > 1
 
     def _collect(self) -> list[tuple]:
         series = []
@@ -234,7 +243,12 @@ class CompareView(ttk.Frame):
             return
         self._draw(series)
 
-        if len(series) >= 2:
+        if self._mixed_modes(series):
+            # Allowed -- sometimes it is exactly what you want to look at -- but
+            # never without saying so: the two modes do not measure the same
+            # interval, so a delta between them is not a like-for-like figure.
+            self.status_var.set(tr("compare.mixed_modes"))
+        elif len(series) >= 2:
             self.status_var.set(f"{tr('compare.baseline')}: {baseline[1]}")
         else:
             self.status_var.set(tr("compare.hint_one"))
