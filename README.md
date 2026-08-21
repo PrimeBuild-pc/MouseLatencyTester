@@ -141,7 +141,14 @@ polling interval and the OS input stack. It does **not** cover display or render
 > strip of **removable** conductive copper tape on the outside of the left button. Peel it off and
 > the mouse is exactly as it was.
 
-### Feature maturity — read this first
+### The hardware is finished
+
+Every part of the tester is built, wired and verified on the bench. Nothing in the list below is
+waiting on hardware. What is left is an **enclosure**: a 3D-printed box to hold the Teensy, the
+OLED, the KY-018 and the two buttons, so the thing stops being a breadboard. That is cosmetic and
+changes no measurement.
+
+#### Feature maturity
 
 | | Feature | Status |
 |---|---|---|
@@ -149,11 +156,14 @@ polling interval and the OS input stack. It does **not** cover display or render
 | 2 | **OLED SH1106** | ✅ Working. Frozen during test mode so I²C traffic cannot disturb the timing |
 | 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. Recorded with each run; it plays no part in any measurement |
 | 4 | **BTN1 / BTN2 buttons** | ✅ **Working. 10/10 acceptance test passed on hardware.** BTN1 enters/leaves test mode, BTN2 clears the live run outside test mode. Presses are still counted and logged |
-| 5 | **Probe-to-Photon mode** | 🧪 **Implemented, firmware v1.5.** Separate mode, own calibration, own metric. Accuracy is limited by the KY-018 — [read this](#probe-to-photon) before quoting a number |
-| 6 | 2N2222A transistor + 4 × 220 Ω | 🚫 **Unused / reserved.** Not used by the current validated build: not connected, no firmware, no protocol |
+| 5 | **Probe-to-Photon mode** | ✅ **Working, firmware v1.5.** Separate mode, own calibration, own metric. Verified on hardware: 40 clicks, ~16 ms median against ~3 ms on the same mouse in Probe-to-PC. Accuracy is limited by the KY-018 — [read this](#probe-to-photon) before quoting a number |
+| 6 | 2N2222A transistor + 4 × 220 Ω | ❌ **Not needed. Do not buy them.** They turned out to have no role in the finished tester |
 
-Row 6 is not wired on purpose. Row 5 needed no new wiring: the KY-018 was already on `A0` and the
-probe was already on `D2`.
+**On the transistor and the resistors:** an early parts list included a 2N2222A and four 220 Ω
+resistors. The finished tester does not use them, and no future mode needs them either — the
+non-invasive probe method never switches anything, and Probe-to-Photon reads the KY-018 that was
+already wired. They are listed here only so anyone who bought the kit knows to leave them in the
+drawer. Nothing in this repository references them electrically.
 
 ---
 
@@ -337,8 +347,8 @@ reproduced without any prior context.
 | — | **Soldering iron + solder** | Permanent joints on the probe lead and the tape lead | **Never used on the mouse itself** |
 | — | **Insulating tape** | Strain relief and shorts prevention | |
 | 1 | **Micro USB cable** | Power and serial | A data cable, not charge-only |
-| 1 | 2N2222A NPN transistor | — | 🚫 **Unused / reserved — not used by the current validated build.** Not connected, not supported by the firmware |
-| 4 | 220 Ω resistors | — | 🚫 **Unused / reserved — not used by the current validated build.** Not connected |
+| — | ~~2N2222A NPN transistor~~ | — | ❌ **Not needed.** Was on an early list; the finished tester has no use for it |
+| — | ~~220 Ω resistors~~ | — | ❌ **Not needed.** Same |
 
 > [!NOTE]
 > An earlier version of this project's parts list mentioned *two* OLED displays as a future upgrade.
@@ -356,6 +366,9 @@ reproduced without any prior context.
 > will ever appear.
 
 Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard rails.
+
+Everything in the list above is in the built tester. The two struck-through rows are there so a kit
+buyer knows they are not missing a step.
 
 </details>
 
@@ -452,9 +465,9 @@ build agree with each other.
   Colour codes: BLK=GND  RED=VCC  YEL=SCL  GRN=SDA
                 BLU=KY-018 signal  WHT=probe  ORG=BTN1  PUR=BTN2
 
-  UNUSED / RESERVED, not part of this build: 2N2222A transistor, 4x 220 ohm resistors.
   Nothing is wired to the mouse other than removable copper tape on the outside
-  of the left button.
+  of the left button.  The 2N2222A and the 220 ohm resistors are NOT part of
+  this tester and are not needed at all.
 ```
 
 ```mermaid
@@ -488,13 +501,9 @@ graph LR
     BTN2["BTN2<br/>4-pin, diagonal"] -->|purple| B1
     BTN2 -->|black| GND
 
-    TRANSISTOR["2N2222A + 4x 220 Ω<br/>UNUSED / RESERVED"]:::todo
-
-    classDef todo fill:#2a2a2a,stroke:#b45309,stroke-dasharray: 5 4,color:#fbbf24
 ```
 
-The 2N2222A and its resistor appear only to record that they exist and are **unused by the current
-validated build**. No connection for them is invented here.
+This is the whole tester. There is no unwired component and nothing left to connect.
 
 </details>
 
@@ -516,7 +525,7 @@ Each step must pass before moving to the next.
 | 8 | **Test mode** | Overlay appears, `TESTMODE:ON`, OLED freezes, green ⇄ red tracks `ARMED`/`REARM` |
 | 9 | **BTN1 / BTN2** | 10 presses → **exactly 10** events, no phantoms, no doubles, no repeat while held. Then BTN1 enters/leaves test mode and BTN2 clears the run outside it |
 | 10 | **Probe-to-Photon** | Aim the KY-018 at the target, calibrate black then white, and check the separation is accepted. Then 10 presses → 10 `OPT:` samples |
-| 11 | Transistor | 🚫 Nothing to do. The 2N2222A and the 220 Ω resistors stay out of the circuit |
+| 11 | **Done** | That is the whole bring-up. Nothing else needs wiring — in particular the 2N2222A and the 220 Ω resistors are not part of this tester |
 
 Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 
@@ -534,9 +543,8 @@ Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 - **No external resistors on the buttons.** `INPUT_PULLUP` provides them; pull-downs break the logic.
 - **Never modify the mouse.** No opening it, no soldering to its PCB, no transistor across its
   microswitch. Removable copper tape on the outside of the button is the only mouse-side change.
-- **The 2N2222A and the 220 Ω resistor are unused/reserved** — not part of this build. If they are
-  ever used, note that EBC and ECB pinouts both exist depending on package and manufacturer, so the
-  exact part must be identified first.
+- **The 2N2222A and the 220 Ω resistors are not used at all.** Leave them out; there is no wiring
+  for them anywhere in this project.
 - Measured supply on USB: **≈ 4.8 V**. Both the OLED and the KY-018 are fine at that level.
 
 </details>
@@ -626,6 +634,11 @@ Both modes are archived side by side and can be compared, but a comparison that 
 so in the Compare tab: they do not measure the same interval, so a delta between them is not a
 like-for-like figure.
 
+A measured example, same mouse, same session: **≈ 3 ms** in Probe-to-PC, **≈ 16 ms** in
+Probe-to-Photon over 40 clicks. The ~13 ms difference is the application's repaint, the compositor,
+the GPU queue, the panel — **and the KY-018's own response**, which cannot be separated out from it.
+Read the difference as "this whole chain, including my sensor", never as "my monitor adds 13 ms".
+
 ---
 
 ## Firmware
@@ -714,6 +727,17 @@ refuses to build if anything fails, then emits the installer and its SHA-256 int
 `build\installer\`.
 
 ---
+
+## Roadmap
+
+The tester itself is done. What is left:
+
+- **A 3D-printed enclosure.** A box for the Teensy, the OLED, the KY-018 and the two buttons, with a
+  mount that holds the probe steady against the mouse button — probe alignment is the largest error
+  source in the whole method, and a printed jig fixes it better than a helping-hands clamp does.
+  The STL will live in this repository when it exists.
+- Nothing else is planned. The measurement path is verified and deliberately frozen; changes to it
+  need before/after numbers.
 
 ## Contributing
 

@@ -363,9 +363,9 @@ is planned.
 
 ## 11. Not implemented
 
-* **2N2222A transistor and its 220 Ω resistor** — **unused / reserved**, not
-  used by the current validated build: not connected, no protocol, no firmware,
-  no measurement mode.
+* **2N2222A transistor and the 220 Ω resistors** — **not used at all.** They
+  were on an early parts list; the finished tester has no role for them, and no
+  protocol, firmware or measurement mode references them.
 * **Probe-to-Photon mode** — specified, **not implemented**. No command byte, no
   result token and no calibration exchange exist for it yet. Today the KY-018
   provides the `LIGHT` telemetry value and nothing else.

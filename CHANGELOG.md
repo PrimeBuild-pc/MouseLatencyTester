@@ -97,10 +97,22 @@ versioning follows [Semantic Versioning](https://semver.org/).
   The diff from v1.4 removes six lines: three version strings, one comment, the
   `if (probeFlag)` that became `} else if (probeFlag)`, and the OLED refresh
   guard that now also checks the optical mode. Everything else is an addition.
-- The 2N2222A and the 220 Ω resistors remain **unused and unwired**, and the
-  mouse remains untouched: no opening it, no soldering to its PCB, no transistor
-  across its microswitch. Removable copper tape on the outside of the button is
-  still the only mouse-side modification, in this mode as in the other.
+- The mouse remains untouched: no opening it, no soldering to its PCB, no
+  transistor across its microswitch. Removable copper tape on the outside of the
+  button is still the only mouse-side modification, in this mode as in the other.
+
+### Settled
+
+- **The hardware is finished.** Every component is built, wired and verified;
+  nothing is waiting on hardware. What is left is a 3D-printed enclosure, which
+  changes no measurement.
+- **The 2N2222A and the 220 Ω resistors are not needed.** They were on an early
+  parts list and never found a role — not in the probe method, which switches
+  nothing, and not in Probe-to-Photon, which reads a sensor that was already
+  wired. Documented as "do not buy" rather than left dangling as "reserved".
+- **Probe-to-Photon verified on hardware:** 40 clicks, ~16 ms median against
+  ~3 ms for the same mouse in Probe-to-PC. The ~13 ms difference is the display
+  pipeline *and* the KY-018's own response together, and is documented as such.
 
 ---
 
@@ -252,8 +264,8 @@ exactly as in the last known-good internal build.
 
 ### Not implemented
 
-- 2N2222A transistor and its 220 Ω resistor — **unused / reserved**, not used by
-  the current validated build: not connected, no firmware, no protocol.
+- 2N2222A transistor and the 220 Ω resistors — **not used at all**, settled: the
+  finished tester has no role for them.
 - **Probe-to-Photon mode** — specified, not implemented. Design recorded in the
   README; no firmware, no protocol token, no UI. It will be a separate mode from
   Probe-to-PC and will not alter the existing timing path.
