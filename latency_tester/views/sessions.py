@@ -7,8 +7,8 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import TYPE_CHECKING
 
 from .. import export
-from ..constants import CONNECTION_MODES, POLLING_RATES
-from ..database import run_as_metadata
+from ..constants import CONNECTION_MODES, MODE_LABELS, MODE_PHOTON, POLLING_RATES
+from ..database import run_as_metadata, run_mode
 from ..i18n import translator as tr
 from ..stats import compute_stats, fmt_ms
 from ..widgets import form_row, tree_with_scrollbar
@@ -20,6 +20,7 @@ COLUMNS = (
     ("date", "sessions.col_date", 140),
     ("device", "sessions.col_device", 150),
     ("run", "sessions.col_run", 180),
+    ("measure", "sessions.col_measure", 110),
     ("poll", "sessions.col_poll", 60),
     ("mode", "sessions.col_mode", 90),
     ("dpi", "sessions.col_dpi", 60),
@@ -110,6 +111,7 @@ class SessionsView(ttk.Frame):
                     run["started_at"].replace("T", " ")[:16],
                     run["device_name"],
                     ("[DEMO] " if run["is_demo"] else "") + run["name"],
+                    tr(MODE_LABELS.get(run_mode(run), "mode.probe_to_pc")),
                     run["polling_rate_hz"] or "",
                     run["connection_mode"] or "",
                     run["dpi"] or "",
@@ -137,9 +139,15 @@ class SessionsView(ttk.Frame):
             return
         run = self.app.db.get_run(selected[0])
         stats = compute_stats(self.app.db.get_latencies(selected[0]))
+        mode = run_mode(run)
         lines = [
             f"{run['device_name']} — {run['name']}"
             + ("   [DEMO]" if run["is_demo"] else ""),
+            f"{tr('mode.title')}: {tr(MODE_LABELS.get(mode, 'mode.probe_to_pc'))}"
+            + (f"   {tr('photon.dark')}={run['optical_dark']}"
+               f"   {tr('photon.bright')}={run['optical_bright']}"
+               f"   {tr('photon.threshold')}={run['optical_threshold']}"
+               if mode == MODE_PHOTON else ""),
             f"{tr('live.polling')}: {run['polling_rate_hz'] or '—'}   "
             f"{tr('live.connection_mode')}: {run['connection_mode'] or '—'}   "
             f"{tr('live.dpi')}: {run['dpi'] or '—'}   "

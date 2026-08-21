@@ -13,8 +13,8 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
 
-from . import (SUPPORTED_FIRMWARE, __version__, export, protocol,
-               serial_service, theme)
+from . import SUPPORTED_FIRMWARE, __version__, export, protocol, serial_service, theme
+from .constants import MEASUREMENT_MODES, MODE_PHOTON, MODE_PROBE_PC
 from .database import LatencyDB
 from .demo import PORT_NAME as DEMO_PORT
 from .demo import DemoDevice
@@ -26,6 +26,17 @@ log = logging.getLogger(__name__)
 
 PUMP_INTERVAL_MS = 50
 LIGHT_POLL_MS = 1000
+#: Faster reading while the optical calibration target is showing.
+LIGHT_AIM_POLL_MS = 150
+#: How long to let the LDR settle after the target changes colour, before a
+#: baseline is sampled.  A photoresistor is slow; this is not a guess to tune
+#: away, it is the sensor's own response time.
+OPTICAL_SETTLE_MS = 400
+#: The optical calibration, in order: (target is bright, command to send).
+PHOTON_CALIBRATION_STEPS = (
+    (False, protocol.CMD_CAL_DARK),
+    (True, protocol.CMD_CAL_BRIGHT),
+)
 RECONNECT_INTERVAL_MS = 3000
 
 class LatencyTesterApp:
@@ -49,6 +60,7 @@ class LatencyTesterApp:
         self.test_mode = False
         self.test_complete = False
         self.overlay = None
+        self.cal_window = None
         self._reconnect_port: str | None = None
 
         # Current, unsaved run.
@@ -113,6 +125,21 @@ class LatencyTesterApp:
         self.language_var = tk.StringVar(value=tr.language)
         self.theme_var = tk.StringVar(value=str(s.get("theme")))
         self.auto_connect_var = tk.BooleanVar(value=bool(s.get("auto_connect")))
+        self.confirm_btn2_var = tk.BooleanVar(value=bool(s.get("confirm_btn2_reset")))
+
+        # Probe-to-Photon.  The mode is a plain string so it can go straight
+        # into the archive; MEASUREMENT_MODES is the only accepted vocabulary.
+        mode = s.get("measurement_mode")
+        self.measure_mode_var = tk.StringVar(
+            value=mode if mode in MEASUREMENT_MODES else MODE_PROBE_PC)
+        self.optical_dark: int | None = None
+        self.optical_bright: int | None = None
+        self.optical_threshold: int | None = None
+        self.optical_rising = True
+        self.opt_dark_var = tk.StringVar(value="—")
+        self.opt_bright_var = tk.StringVar(value="—")
+        self.opt_threshold_var = tk.StringVar(value="—")
+        self.opt_status_var = tk.StringVar(value=tr("photon.status_uncalibrated"))
 
         self.device_name_to_id: dict[str, int] = {}
 
@@ -211,7 +238,21 @@ class LatencyTesterApp:
             self.port_var.set(labels[0])
 
         if auto_connect and detected and not self.serial.connected:
-            self.root.after(250, self.connect)
+            self.root.after(250, lambda: self._auto_connect(attempts=4))
+
+    def _auto_connect(self, attempts: int) -> None:
+        """Connect at startup without ever blocking the user with a dialog.
+
+        Windows can still be holding the COM port for a moment after a previous
+        run of the dashboard, so the automatic attempt is retried quietly
+        instead of greeting the user with an access error.
+        """
+        if not self.running or self.serial.connected:
+            return
+        if self.connect(silent=True):
+            return
+        if attempts > 1:
+            self.root.after(700, lambda: self._auto_connect(attempts - 1))
 
     def _selected_port(self) -> str:
         value = self.port_var.get().strip()
@@ -220,13 +261,19 @@ class LatencyTesterApp:
     def toggle_connection(self) -> None:
         self.disconnect() if self.serial.connected else self.connect()
 
-    def connect(self) -> None:
+    def connect(self, silent: bool = False) -> bool:
+        """Open the selected port.  Returns whether the dashboard is connected.
+
+        ``silent`` suppresses the error dialogs: an automatic attempt reports
+        by returning False, only a user-initiated one interrupts with a modal.
+        """
         if self.serial.connected:
-            return
+            return True
         device = self._selected_port()
         if not device:
-            messagebox.showwarning(tr("conn.title"), tr("conn.no_port"))
-            return
+            if not silent:
+                messagebox.showwarning(tr("conn.title"), tr("conn.no_port"))
+            return False
 
         if device == DEMO_PORT:
             self.serial.attach(DemoDevice(), DEMO_PORT, is_demo=True)
@@ -235,9 +282,10 @@ class LatencyTesterApp:
             try:
                 transport = serial_service.open_serial(device)
             except Exception as exc:
-                messagebox.showerror(tr("conn.open_failed_title"),
-                                     tr("conn.open_failed", error=exc))
-                return
+                if not silent:
+                    messagebox.showerror(tr("conn.open_failed_title"),
+                                         tr("conn.open_failed", error=exc))
+                return False
             self.serial.attach(transport, device)
             self.log(tr("log.connected", port=device))
             self._reconnect_port = device
@@ -245,8 +293,10 @@ class LatencyTesterApp:
         self._update_connection_labels()
         for delay, command in ((400, protocol.CMD_VERSION),
                                (650, protocol.CMD_STATS),
-                               (900, protocol.CMD_LIGHT)):
+                               (900, protocol.CMD_LIGHT),
+                               (1150, protocol.CMD_CAL_REPORT)):
             self.root.after(delay, lambda c=command: self.serial.send(c))
+        return True
 
     def disconnect(self, keep_retrying: bool = False) -> None:
         was_demo = self.serial.is_demo
@@ -327,6 +377,131 @@ class LatencyTesterApp:
         if self.serial.connected and not self.test_mode:
             self.send(protocol.CMD_RESET)
 
+    # =========================================================== photon mode ==
+    @property
+    def photon_mode(self) -> bool:
+        return self.measure_mode_var.get() == MODE_PHOTON
+
+    def set_measurement_mode(self, mode: str) -> None:
+        """Switch between Probe-to-PC and Probe-to-Photon.
+
+        The two are separate measurements, so changing mode starts a new run
+        rather than appending optical samples to serial ones.
+        """
+        previous = self.measure_mode_var.get()
+        if mode not in MEASUREMENT_MODES or mode == previous:
+            return
+        if self.test_mode:
+            self.measure_mode_var.set(previous)     # put the radio back
+            messagebox.showinfo(tr("photon.title"), tr("dlg.exit_test_first"))
+            return
+        unsaved = bool(self.current_samples) and not self.session_saved
+        if unsaved and not messagebox.askyesno(tr("photon.title"),
+                                               tr("dlg.discard_confirm")):
+            self.measure_mode_var.set(previous)
+            return
+        self.measure_mode_var.set(mode)
+        self.settings.set("measurement_mode", mode)
+        self.clear_samples()
+        self.run_started_at = None
+        self.run_ended_at = None
+        self.log(tr("log.mode", mode=tr(f"mode.{mode}")))
+        if self.serial.connected and mode == MODE_PHOTON:
+            self.send(protocol.CMD_CAL_REPORT)
+        self.live_view.refresh_mode()
+
+    def calibrate_optical(self) -> None:
+        """Take both optical baselines, full-screen, on the centred target.
+
+        One button, because there is only one correct way to do it: the two
+        readings must come from the same patch of screen the measurement uses.
+        """
+        if (not self.serial.connected or self.test_mode
+                or self.cal_window is not None):
+            return
+        from .views.testmode import OpticalCalibrationWindow
+        self.cal_window = OpticalCalibrationWindow(self.root, self)
+        if not self.photon_mode:
+            self.send(protocol.CMD_PHOTON_ON)
+        self.root.after(300, lambda: self._photon_calibration_step(0))
+
+    def retry_optical_calibration(self) -> None:
+        """Re-run the sequence without closing the window, so the live reading
+        stays on screen while the sensor is being aimed."""
+        if self.cal_window is None:
+            return
+        self._photon_calibration_step(0)
+
+    def cancel_optical_calibration(self) -> None:
+        """Close the calibration window, whether it finished or was escaped."""
+        if self.cal_window is None:
+            return
+        self.cal_window.close()
+        self.cal_window = None
+        self.live_view.refresh_mode()
+
+    def _calibration_surface(self):
+        """Whatever is showing the target right now: the test overlay during a
+        run, the standalone window otherwise."""
+        return self.overlay if self.test_mode else self.cal_window
+
+    def optical_ready(self) -> tuple[bool, str]:
+        """Is the optical calibration good enough to start a test?
+
+        Returns ``(ok, reason)``; the reason is already translated and is what
+        the interface shows when it refuses to start.
+        """
+        if self.optical_dark is None or self.optical_bright is None:
+            return False, tr("photon.status_uncalibrated")
+        if protocol.optical_threshold(self.optical_dark, self.optical_bright) is None:
+            # Say how far off it is: "too close" leaves you guessing whether the
+            # setup is nearly right or nowhere near.
+            return False, tr("photon.status_separation",
+                             dark=self.optical_dark,
+                             bright=self.optical_bright,
+                             gap=abs(self.optical_bright - self.optical_dark),
+                             minimum=protocol.OPTICAL_MIN_SEPARATION)
+        return True, tr("photon.status_ready")
+
+    def _apply_optical_cal(self, payload: dict) -> None:
+        self.optical_dark = payload["dark"]
+        self.optical_bright = payload["bright"]
+        self.optical_threshold = payload["threshold"]
+        self.optical_rising = payload["rising"]
+        self.opt_dark_var.set(str(payload["dark"]))
+        self.opt_bright_var.set(str(payload["bright"]))
+        self.opt_threshold_var.set(str(payload["threshold"]))
+        self.opt_status_var.set(self.optical_ready()[1])
+
+    # ============================================================== buttons ==
+    def _button_action(self, index: int) -> None:
+        """Act on a physical button press.  The firmware only ever *reports*.
+
+        The dashboard stays the authority on session state, so a press that
+        would disturb a run is refused instead of obeyed.  The firmware already
+        withholds button events between t0 and t1, so nothing can arrive here
+        mid-measurement.
+        """
+        if not self.serial.connected or self.serial.calibrating:
+            self.log(tr("log.button_refused"))
+            return
+
+        if index == 1:
+            self.exit_test_mode() if self.test_mode else self.enter_test_mode()
+        elif index == 2:
+            # Never inside test mode: a stray press must not wipe a live run.
+            if self.test_mode:
+                self.log(tr("log.button_refused"))
+                return
+            needs_confirmation = bool(self.confirm_btn2_var.get()
+                                      and self.current_samples)
+            if needs_confirmation and not messagebox.askyesno(
+                    tr("dlg.new_run"), tr("dlg.btn2_confirm")):
+                self.log(tr("log.button_refused"))
+                return
+            # Same entry point the GUI Reset button and the keyboard use.
+            self.reset_stats()
+
     # ============================================================= test mode ==
     def _accept_trig(self) -> bool:
         """Called from the serial thread: refuse new samples past the target."""
@@ -354,14 +529,52 @@ class LatencyTesterApp:
         self.overlay = TestModeOverlay(self.root, self, target)
 
         # Same ordering as the verified v2 flow: clear the firmware counters
-        # first, then freeze the OLED.
+        # first, then freeze the OLED.  In Probe-to-Photon the optical path is
+        # selected last, once the display is already frozen.
         if self.auto_reset_var.get():
             self.send(protocol.CMD_RESET)
-            self.root.after(
-                180,
-                lambda: self.send(protocol.CMD_TEST_MODE_ON) if self.serial.connected else None)
+            self.root.after(180, self._start_firmware_test_mode)
         else:
-            self.send(protocol.CMD_TEST_MODE_ON)
+            self._start_firmware_test_mode()
+
+    def _start_firmware_test_mode(self) -> None:
+        if not self.serial.connected:
+            return
+        self.send(protocol.CMD_TEST_MODE_ON)
+        if self.photon_mode:
+            self.root.after(80, self._arm_photon)
+
+    def _arm_photon(self) -> None:
+        if not self.serial.connected or not self.test_mode:
+            return
+        self.send(protocol.CMD_PHOTON_ON)
+        # Calibrate on the real target, in the real overlay.  A baseline taken
+        # from the side panel describes a different patch of screen -- different
+        # backlight, and in test mode that spot is not even the target any more.
+        self.root.after(240, lambda: self._photon_calibration_step(0))
+
+    def _photon_calibration_step(self, index: int) -> None:
+        """Walk the dark/bright baselines, then hand the target surface back."""
+        surface = self._calibration_surface()
+        if surface is None or not self.serial.connected:
+            return
+        if index >= len(PHOTON_CALIBRATION_STEPS):
+            ok, reason = self.optical_ready()
+            surface.finish_calibration(ok, reason)
+            self.log(reason)
+            return
+        bright, command = PHOTON_CALIBRATION_STEPS[index]
+        surface.show_calibrating(bright)
+        # Paint first, sample only once the photoresistor has settled.
+        self.root.after(OPTICAL_SETTLE_MS,
+                        lambda: self._photon_calibration_sample(command, index))
+
+    def _photon_calibration_sample(self, command: str, index: int) -> None:
+        if self._calibration_surface() is None or not self.serial.connected:
+            return
+        self.send(command)
+        # Let the OPT_CAL: reply arrive and be parsed before moving on.
+        self.root.after(260, lambda: self._photon_calibration_step(index + 1))
 
     def exit_test_mode(self) -> None:
         was_active = self.test_mode
@@ -370,6 +583,10 @@ class LatencyTesterApp:
         self.run_ended_at = datetime.now().isoformat(timespec="seconds")
 
         if was_active and self.serial.connected:
+            # Leave the optical path before the OLED comes back, so a stray
+            # probe contact can never be measured with a half-torn-down state.
+            if self.photon_mode:
+                self.send(protocol.CMD_PHOTON_OFF)
             self.send(protocol.CMD_TEST_MODE_OFF)
 
         if self.overlay is not None:
@@ -422,6 +639,10 @@ class LatencyTesterApp:
             "calibration_us": self.calibration_us(),
             "teensy_firmware": self.serial.firmware_version or "",
             "is_demo": 1 if self.is_demo else 0,
+            "mode": self.measure_mode_var.get(),
+            "optical_dark": self.optical_dark if self.photon_mode else None,
+            "optical_bright": self.optical_bright if self.photon_mode else None,
+            "optical_threshold": self.optical_threshold if self.photon_mode else None,
             "light_start": self.light_start,
             "light_end": self.light_end if self.light_end is not None else self.current_light,
             "started_at": self.run_started_at or datetime.now().isoformat(timespec="seconds"),
@@ -498,6 +719,8 @@ class LatencyTesterApp:
             last_dpi=self.dpi_var.get().strip(),
             target_samples=self.target_samples(),
             auto_reset_on_test=bool(self.auto_reset_var.get()),
+            measurement_mode=self.measure_mode_var.get(),
+            confirm_btn2_reset=bool(self.confirm_btn2_var.get()),
             last_device_id=self.device_name_to_id.get(self.device_var.get().strip()),
         )
         self.settings.save()
@@ -568,6 +791,26 @@ class LatencyTesterApp:
     def _latencies(self) -> list[float]:
         return [s["latency_ms"] for s in self.current_samples]
 
+    def _record_sample(self, payload: dict, raw_optical: int | None = None) -> None:
+        """Store one finished measurement.  Shared by both modes on purpose:
+        the archive, the metrics and the test-mode target must behave
+        identically whichever path produced the number."""
+        sample = {
+            "latency_ms": payload["latency_ms"],
+            "timestamp": datetime.now().isoformat(timespec="milliseconds"),
+        }
+        if raw_optical is not None:
+            sample["raw_optical"] = raw_optical
+        self.current_samples.append(sample)
+        self.session_saved = False
+        self._update_metrics()
+        self.state_var.set("PHOTON" if self.photon_mode else "READY")
+
+        if self.test_mode and self.test_sample_count() >= self.target_samples():
+            self.test_complete = True
+            if self.overlay:
+                self.overlay.set_mode("complete")
+
     def clear_samples(self) -> None:
         self.current_samples.clear()
         self.session_saved = False
@@ -615,23 +858,42 @@ class LatencyTesterApp:
         kind, payload = event.kind, event.payload
 
         if kind == "latency":
-            self.current_samples.append({
-                "latency_ms": payload["latency_ms"],
-                "timestamp": datetime.now().isoformat(timespec="milliseconds"),
-            })
-            self.session_saved = False
-            self._update_metrics()
-            self.state_var.set("READY")
+            # Probe-to-PC only.  An optical result arrives as "optical" and is
+            # never mistaken for one of these.
+            self._record_sample(payload)
             self.log(tr("log.latency", value=f"{payload['latency_ms']:.3f}"))
-
-            if self.test_mode:
-                if self.test_sample_count() >= self.target_samples():
-                    self.test_complete = True
-                    if self.overlay:
-                        self.overlay.set_mode("complete")
-            else:
+            if not self.test_mode:
                 self.root.after(
                     150, lambda: self.send(protocol.CMD_LIGHT) if self.serial.connected else None)
+
+        elif kind == "optical":
+            self._record_sample(payload, raw_optical=payload["raw_optical"])
+            self.log(tr("log.optical", value=f"{payload['latency_ms']:.3f}",
+                        raw=payload["raw_optical"]))
+
+        elif kind == "optical_cal":
+            self._apply_optical_cal(payload)
+            self.log(tr("log.optical_cal", dark=payload["dark"],
+                        bright=payload["bright"], threshold=payload["threshold"]))
+
+        elif kind == "optical_timeout":
+            self.state_var.set("OPT T/O")
+            self.log(tr("log.optical_timeout"))
+
+        elif kind == "optical_error":
+            self.state_var.set("OPT ERR")
+            self.log(tr("log.optical_error", reason=payload))
+
+        elif kind == "optical_drop":
+            self.log(tr("log.optical_drop", value=fmt_ms(payload)))
+
+        elif kind == "photon_on":
+            self.state_var.set("PHOTON")
+            self.log(tr("log.photon_on"))
+
+        elif kind == "photon_off":
+            self.state_var.set("READY")
+            self.log(tr("log.photon_off"))
 
         elif kind == "stats":
             self.cal_var.set(f"{payload['calib']} µs")
@@ -699,13 +961,13 @@ class LatencyTesterApp:
             self.log(tr("log.drop", value=fmt_ms(payload)))
 
         elif kind == "button":
-            # TEST PHASE: logged and counted only. No action is bound to the
-            # buttons until the hardware has been verified.
             index = payload["index"]
             if index in self.button_counts:
                 self.button_counts[index] += 1
                 self.button_vars[index].set(str(self.button_counts[index]))
             self.log(payload["token"])
+            if payload["action"] == "PRESS":
+                self._button_action(index)
 
         elif kind == "banner":
             self.firmware_var.set(payload)
@@ -734,7 +996,12 @@ class LatencyTesterApp:
                 and not self.serial.calibrating):
             self.send(protocol.CMD_LIGHT)
         if self.running:
-            self._timers["light"] = self.root.after(LIGHT_POLL_MS, self._poll_light)
+            # While the optical target is on screen the reading is an aiming
+            # instrument, and once a second is too slow to see the black and
+            # white phases at all.  Safe to speed up: no measurement is running.
+            interval = (LIGHT_AIM_POLL_MS if self.cal_window is not None
+                        else LIGHT_POLL_MS)
+            self._timers["light"] = self.root.after(interval, self._poll_light)
 
     # ============================================================== shutdown ==
     def close(self) -> None:
@@ -750,6 +1017,7 @@ class LatencyTesterApp:
         self._timers.clear()
         if self.test_mode:
             self.exit_test_mode()
+        self.cancel_optical_calibration()
 
         try:
             self.settings.set("window_geometry", self.root.winfo_geometry())

@@ -78,9 +78,15 @@ class PreferencesView(ttk.Frame):
                                 command=self._change_auto_connect)
         check.grid(row=2, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
+        btn2 = ttk.Checkbutton(box, text=tr("settings.confirm_btn2"),
+                               variable=self.app.confirm_btn2_var,
+                               command=self._change_confirm_btn2)
+        btn2.grid(row=3, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        attach_tooltip(btn2, tr("tip.confirm_btn2"), self.app.palette)
+
         ttk.Label(box, text=tr("settings.restart_hint"), style="Muted.TLabel",
                   wraplength=420, justify="left").grid(
-            row=3, column=0, columnspan=2, sticky="w", pady=(10, 0))
+            row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
     def _change_language(self, _event=None) -> None:
         chosen = self.language_display.get()
@@ -101,6 +107,11 @@ class PreferencesView(ttk.Frame):
 
     def _change_auto_connect(self) -> None:
         self.app.settings.set("auto_connect", bool(self.app.auto_connect_var.get()))
+        self.app.settings.save()
+
+    def _change_confirm_btn2(self) -> None:
+        self.app.settings.set("confirm_btn2_reset",
+                              bool(self.app.confirm_btn2_var.get()))
         self.app.settings.save()
 
     # ------------------------------------------------------------- updates --

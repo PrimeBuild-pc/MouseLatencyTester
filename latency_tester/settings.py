@@ -29,6 +29,8 @@ DEFAULTS: dict[str, Any] = {
     "target_samples": 50,
     "auto_connect": True,
     "auto_reset_on_test": True,
+    "measurement_mode": "probe_to_pc",   # remembered between sessions
+    "confirm_btn2_reset": True,          # ask before BTN2 wipes a live run
     "window_geometry": "",
     "data_dir": "",             # empty -> default_data_dir()
 }

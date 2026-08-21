@@ -1,6 +1,12 @@
 /*
- * Latency Tester v1.4 - Probe + OLED + KY-018 + Buttons
+ * Latency Tester v1.5 - Probe + OLED + KY-018 + Buttons + Probe-to-Photon
  * Teensy 2.0 (ATmega32U4)
+ *
+ * v1.5 = v1.4 plus a SECOND, SEPARATE measurement mode.  The Probe-to-PC path
+ * (probeISR, t0/t1, the TRIG/'H' handshake, runCalibration, serviceProbeRearm,
+ * the OLED freeze and every filter) is byte-identical to v1.4 and v1.3.  The
+ * optical path is reached only while opticalMode is on, and opticalMode is off
+ * unless the dashboard asks for it.
  *
  * Wiring:
  *   D2 / digital 7 -> Probe (metal tip)          [white]
@@ -32,6 +38,21 @@
  *
  * Companion protocol remains compatible with latency_companion.py:
  *   Teensy: "TRIG" -> PC detects click -> PC: 'H' -> Teensy computes latency.
+ *
+ * Probe-to-Photon (mode 2, entirely separate):
+ *   t0 = the same probe contact on D2, taken in the same ISR.
+ *   After t0 the only thing this firmware does is read A0 in a tight loop.
+ *   t1 = the first reading past the calibrated threshold.  latency = t1 - t0.
+ *   No serial traffic happens between t0 and t1, so nothing is subtracted:
+ *   calibOffset belongs to the serial round-trip and is NOT applied here.
+ *   The PC flips its own on-screen target from black to white when Windows
+ *   reports the click, so the light transition the sensor sees is produced by
+ *   the machine under test, not by this firmware.
+ *
+ *   The KY-018 is a photoresistor: its own response time is in the
+ *   milliseconds and is therefore a real part of every number this mode
+ *   reports.  Useful for comparing a setup against itself; not a precision
+ *   click-to-photon instrument.
  */
 
 #include <Wire.h>
@@ -84,6 +105,34 @@ uint8_t pendingButtonPress = 0;
 
 // ---- Calibration ----
 #define CALIB_SAMPLES   50
+
+// ---- Probe-to-Photon ----
+// Baselines are sampled with the same averaging as the LIGHT telemetry, so a
+// calibration and a live reading are directly comparable.
+#define OPT_MIN_SEPARATION  60      // ADC counts; mirrors protocol.py
+#define OPT_THRESHOLD_NUM   1       // threshold = dark + span * 1/2
+#define OPT_THRESHOLD_DEN   2
+#define OPT_HYSTERESIS      8       // counts inside the dark side, anti-noise
+#define OPT_TIMEOUT_US      400000UL
+#define OPT_LATENCY_MIN_US  500UL
+#define OPT_LATENCY_MAX_US  350000UL
+
+bool opticalMode = false;
+bool opticalCalibrated = false;
+int  opticalDark = 0;
+int  opticalBright = 0;
+int  opticalThreshold = 0;
+bool opticalRising = true;          // does the ADC value climb as light rises?
+int  opticalLastRaw = 0;
+
+// Optical statistics are kept apart from the Probe-to-PC ones on purpose: the
+// two modes measure different things and must never share a mean.
+unsigned long optLast = 0;
+unsigned long optMin = 0;
+unsigned long optMax = 0;
+float optAvg = 0;
+unsigned int optCount = 0;
+float optSum = 0;
 
 // ---- Globals ----
 volatile unsigned long probeTime = 0;
@@ -278,6 +327,160 @@ void flushButtonEvents() {
   pendingButtonPress = 0;
 }
 
+// ---- Probe-to-Photon ----
+// The ADC prescaler is raised only while this mode is active.  At the stock
+// /128 an analogRead costs ~112 us, which would quantise the result far more
+// coarsely than the sensor itself; /16 brings that to ~13 us at the cost of a
+// little absolute accuracy, which does not matter for a threshold crossing.
+void opticalFastADC(bool fast) {
+  ADCSRA = (ADCSRA & ~0x07) | (fast ? 0x04 : 0x07);
+}
+
+// True once the two baselines are far enough apart to tell black from white.
+bool opticalComputeThreshold() {
+  int span = opticalBright - opticalDark;
+  if (span > -OPT_MIN_SEPARATION && span < OPT_MIN_SEPARATION) {
+    opticalCalibrated = false;
+    return false;
+  }
+  opticalRising = (span > 0);
+  opticalThreshold = opticalDark + (span * OPT_THRESHOLD_NUM) / OPT_THRESHOLD_DEN;
+  opticalCalibrated = true;
+  return true;
+}
+
+void sendOpticalCal() {
+  Serial.print("OPT_CAL:dark:");
+  Serial.print(opticalDark);
+  Serial.print(",bright:");
+  Serial.print(opticalBright);
+  Serial.print(",threshold:");
+  Serial.print(opticalThreshold);
+  Serial.print(",rising:");
+  Serial.println(opticalRising ? 1 : 0);
+}
+
+// Has the target crossed into the bright half?  One comparison, no branches
+// worth mentioning: this runs inside the t0->t1 window.
+inline bool opticalIsBright(int value) {
+  return opticalRising ? (value >= opticalThreshold) : (value <= opticalThreshold);
+}
+
+// Is the sensor sitting in the dark half, with margin?  Checked before arming
+// so a target left white cannot fire instantly.
+bool opticalIsDark(int value) {
+  return opticalRising ? (value <= opticalThreshold - OPT_HYSTERESIS)
+                       : (value >= opticalThreshold + OPT_HYSTERESIS);
+}
+
+bool updateOpticalStats(unsigned long latencyUs) {
+  if (latencyUs < OPT_LATENCY_MIN_US || latencyUs > OPT_LATENCY_MAX_US) return false;
+
+  optLast = latencyUs;
+  if (optCount == 0) {
+    optMin = latencyUs;
+    optMax = latencyUs;
+  }
+  if (latencyUs < optMin) optMin = latencyUs;
+  if (latencyUs > optMax) optMax = latencyUs;
+
+  optSum += latencyUs;
+  optCount++;
+  optAvg = optSum / optCount;
+  return true;
+}
+
+void sendOpticalResult(unsigned long latencyUs) {
+  Serial.print("OPT:");
+  Serial.print(latencyUs / 1000.0, 3);
+  Serial.print(",raw:");
+  Serial.print(opticalLastRaw);
+  Serial.print(",min:");
+  Serial.print(optMin / 1000.0, 3);
+  Serial.print(",max:");
+  Serial.print(optMax / 1000.0, 3);
+  Serial.print(",avg:");
+  Serial.print(optAvg / 1000.0, 3);
+  Serial.print(",n:");
+  Serial.println(optCount);
+}
+
+void resetOpticalStats() {
+  optLast = 0;
+  optMin = 0;
+  optMax = 0;
+  optAvg = 0;
+  optCount = 0;
+  optSum = 0;
+}
+
+// One optical measurement.  Nothing is transmitted between t0 and t1 -- the PC
+// needs no cue, it flips its own target when Windows reports the click -- and
+// no OLED or button work can run, because loop() is not running.
+void runOpticalMeasurement() {
+  measurementActive = true;
+
+  noInterrupts();
+  probeFlag = false;
+  unsigned long t0 = probeTime;
+  interrupts();
+
+  if (!opticalCalibrated) {
+    digitalWrite(LED_PIN, LOW);
+    Serial.println("OPT_ERR:NO_CAL");
+    measurementActive = false;
+    Serial.println("REARM");
+    return;
+  }
+
+  // The first sample doubles as the "is the target actually black?" check, so
+  // it costs nothing extra.  A target left white would otherwise fire instantly.
+  int value = analogRead(LIGHT_PIN);
+  if (opticalIsBright(value)) {
+    opticalLastRaw = value;
+    digitalWrite(LED_PIN, LOW);
+    Serial.println("OPT_ERR:NOT_DARK");
+    measurementActive = false;
+    Serial.println("REARM");
+    return;
+  }
+
+  unsigned long t1 = 0;
+  bool crossed = false;
+  while ((micros() - t0) < OPT_TIMEOUT_US) {
+    value = analogRead(LIGHT_PIN);
+    if (opticalIsBright(value)) {
+      // TIMING STOPS HERE.
+      t1 = micros();
+      crossed = true;
+      break;
+    }
+  }
+
+  digitalWrite(LED_PIN, LOW);
+  opticalLastRaw = value;
+
+  if (!crossed) {
+    Serial.println("OPT_TIMEOUT");
+    setState("OPT T/O");
+  } else {
+    // calibOffset is the serial round-trip and has no business here: this
+    // measurement never went near the serial port.
+    unsigned long latency = t1 - t0;
+    if (updateOpticalStats(latency)) {
+      sendOpticalResult(latency);
+      setState("PHOTON");
+    } else {
+      Serial.print("OPT_DROP:OUT_OF_RANGE:");
+      Serial.println(latency / 1000.0, 3);
+      setState("OPT BAD");
+    }
+  }
+
+  measurementActive = false;
+  Serial.println("REARM");
+}
+
 // ---- Interrupt Service Routine ----
 void probeISR() {
   // One physical press must create at most one measurement.  The input is
@@ -425,6 +628,7 @@ void runCalibration() {
 
 // ---- Reset statistics ----
 void resetStats() {
+  resetOpticalStats();
   lastLatency = 0;
   minLatency = 0;
   maxLatency = 0;
@@ -461,7 +665,7 @@ void setup() {
   Wire.setClock(400000);
   oledOK = display.begin(OLED_ADDR, true);
 
-  Serial.println("LATENCY_TESTER v1.4 OLED+LDR+BTN");
+  Serial.println("LATENCY_TESTER v1.5 OLED+LDR+BTN+PHOTON");
   Serial.println("READY");
   if (oledOK) {
     Serial.println("OLED_OK:0x3C");
@@ -523,7 +727,7 @@ void loop() {
         break;
 
       case 'V':
-        Serial.println("LATENCY_TESTER v1.4 - Probe + OLED + KY-018 + Buttons");
+        Serial.println("LATENCY_TESTER v1.5 - Probe + OLED + KY-018 + Buttons + Photon");
         break;
 
       case 'T':
@@ -549,13 +753,52 @@ void loop() {
         Serial.println(lastLight);
         break;
 
+      // ---- Probe-to-Photon -------------------------------------------
+      case 'O':
+        // Selecting the mode is always allowed so the dashboard can show the
+        // sensor state; measuring without a calibration is what gets refused.
+        opticalMode = true;
+        opticalFastADC(true);
+        resetOpticalStats();
+        Serial.println("PHOTON:ON");
+        sendOpticalCal();
+        setState("PHOTON");
+        break;
+
+      case 'N':
+        opticalMode = false;
+        opticalFastADC(false);
+        Serial.println("PHOTON:OFF");
+        setState("READY");
+        drawCurrentScreen();
+        break;
+
+      case 'D':
+        opticalDark = readLight();
+        if (!opticalComputeThreshold()) Serial.println("OPT_ERR:SEPARATION");
+        sendOpticalCal();
+        break;
+
+      case 'W':
+        opticalBright = readLight();
+        if (!opticalComputeThreshold()) Serial.println("OPT_ERR:SEPARATION");
+        sendOpticalCal();
+        break;
+
+      case 'K':
+        sendOpticalCal();
+        break;
+
       default:
         break;
     }
   }
 
-  // Probe contact detected
-  if (probeFlag) {
+  // Probe contact detected.  Probe-to-Photon is checked first and returns
+  // early, so the Probe-to-PC block below stays exactly as it was in v1.3/v1.4.
+  if (probeFlag && opticalMode) {
+    runOpticalMeasurement();
+  } else if (probeFlag) {
     measurementActive = true;
 
     noInterrupts();
@@ -617,7 +860,7 @@ void loop() {
 
   // Live LDR/OLED refresh only while idle. No display traffic is started once
   // a valid probe event is pending or a measurement/calibration is active.
-  if (oledOK && !testMode && !measurementActive && !probeFlag &&
+  if (oledOK && !testMode && !opticalMode && !measurementActive && !probeFlag &&
       (millis() - lastDisplayRefresh >= DISPLAY_REFRESH_MS)) {
     drawCurrentScreen();
   }

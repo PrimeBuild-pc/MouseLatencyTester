@@ -60,6 +60,16 @@ class ClickTracker:
         with self._lock:
             self._last_click_ns = timestamp_ns
 
+    @property
+    def last_click_ns(self) -> int:
+        """Timestamp of the newest OS click, consumed or not.
+
+        Probe-to-Photon needs this: there is no TRIG handshake in that mode, so
+        the target area watches this value to know when to turn white.
+        """
+        with self._lock:
+            return self._last_click_ns
+
     def try_consume(self, trig_ns: int) -> bool:
         """Consume a click matching a TRIG seen at ``trig_ns``.  Pure enough to
         unit-test: no sleeping, no I/O."""
@@ -122,11 +132,17 @@ class SerialService:
         self._running = False
         self.calibrating = False
         transport, self._transport = self._transport, None
+        thread, self._thread = self._thread, None
         if transport is not None:
             try:
                 transport.close()
             except Exception:  # a vanished COM port raises all sorts of things
                 log.debug("error while closing %s", self.port_name, exc_info=True)
+        # The reader can still be inside a blocking read on that same handle.
+        # Windows frees the COM port only once the thread is really gone, so
+        # without this join the next process to start can be denied access.
+        if thread is not None and thread is not threading.current_thread():
+            thread.join(timeout=1.0)
         self.port_name = ""
         self.is_demo = False
 

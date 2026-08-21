@@ -13,7 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Sequence
 
-SCHEMA_VERSION = 2
+from .constants import MODE_PROBE_PC
+
+SCHEMA_VERSION = 3
 
 # The v0 schema exactly as dashboard v2 created it.  Applied with IF NOT EXISTS
 # so an existing archive is left untouched and a fresh one starts from the same
@@ -76,6 +78,17 @@ _MIGRATIONS: list[list[str]] = [
     [
         "ALTER TABLE devices ADD COLUMN hardware_id TEXT NOT NULL DEFAULT ''",
     ],
+    # -> 3 : Probe-to-Photon.  Every run is labelled with the mode that produced
+    #        it, so the two can be archived side by side and never averaged
+    #        together by accident.  Existing rows are Probe-to-PC by definition:
+    #        it was the only mode that existed when they were written.
+    [
+        "ALTER TABLE runs ADD COLUMN mode TEXT NOT NULL DEFAULT 'probe_to_pc'",
+        "ALTER TABLE runs ADD COLUMN optical_dark INTEGER",
+        "ALTER TABLE runs ADD COLUMN optical_bright INTEGER",
+        "ALTER TABLE runs ADD COLUMN optical_threshold INTEGER",
+        "ALTER TABLE samples ADD COLUMN raw_optical INTEGER",
+    ],
 ]
 
 DEVICE_FIELDS = ("name", "manufacturer", "model", "notes",
@@ -85,7 +98,8 @@ DEVICE_FIELDS = ("name", "manufacturer", "model", "notes",
 RUN_FIELDS = ("name", "polling_rate_hz", "connection_mode", "mouse_firmware",
               "notes", "target_samples", "calibration_us", "light_start",
               "light_end", "dpi", "debounce_setting", "teensy_firmware",
-              "is_demo")
+              "is_demo", "mode", "optical_dark", "optical_bright",
+              "optical_threshold")
 
 
 def _now() -> str:
@@ -222,13 +236,15 @@ class LatencyDB:
     def replace_samples(self, run_id: int, samples: Sequence[dict]) -> None:
         self.conn.execute("DELETE FROM samples WHERE run_id=?", (int(run_id),))
         self.conn.executemany(
-            "INSERT INTO samples(run_id, seq, latency_ms, timestamp) VALUES(?,?,?,?)",
+            "INSERT INTO samples(run_id, seq, latency_ms, timestamp, raw_optical) "
+            "VALUES(?,?,?,?,?)",
             [
                 (
                     int(run_id),
                     i + 1,
                     float(s["latency_ms"]),
                     s.get("timestamp") or datetime.now().isoformat(timespec="milliseconds"),
+                    _as_optional_int(s.get("raw_optical")),
                 )
                 for i, s in enumerate(samples)
             ],
@@ -286,6 +302,16 @@ class LatencyDB:
             "SELECT COUNT(*) FROM runs WHERE is_demo=1").fetchone()[0])
 
 
+def _as_optional_int(value: Any) -> int | None:
+    """Raw ADC reading, or ``None`` for a Probe-to-PC sample that has none."""
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _clean(fields: dict, keys: Sequence[str]) -> dict:
     out = {}
     for key in keys:
@@ -296,13 +322,30 @@ def _clean(fields: dict, keys: Sequence[str]) -> dict:
 
 def _run_value(metadata: dict, key: str) -> Any:
     value = metadata.get(key)
+    if key == "mode":
+        # A run with no mode predates Probe-to-Photon, so it is Probe-to-PC.
+        return str(value).strip() if value else MODE_PROBE_PC
     if key in ("target_samples", "calibration_us", "is_demo"):
         return int(value or 0)
-    if key in ("polling_rate_hz", "light_start", "light_end", "dpi"):
+    if key in ("polling_rate_hz", "light_start", "light_end", "dpi",
+               "optical_dark", "optical_bright", "optical_threshold"):
         return int(value) if value not in (None, "") else None
     if value is None:
         return ""
     return value.strip() if isinstance(value, str) else value
+
+
+def run_mode(run: sqlite3.Row | dict) -> str:
+    """The measurement mode of a stored run, defaulting to Probe-to-PC.
+
+    Tolerates a row that predates the column: an archive opened read-only by an
+    older build, or a hand-made dict in a test.
+    """
+    try:
+        value = run["mode"]
+    except (IndexError, KeyError, TypeError):
+        return MODE_PROBE_PC
+    return str(value).strip() or MODE_PROBE_PC
 
 
 def run_as_metadata(run: sqlite3.Row) -> dict:
