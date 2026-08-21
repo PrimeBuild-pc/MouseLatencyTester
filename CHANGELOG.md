@@ -106,10 +106,12 @@ versioning follows [Semantic Versioning](https://semver.org/).
 - **The hardware is finished.** Every component is built, wired and verified;
   nothing is waiting on hardware. What is left is a 3D-printed enclosure, which
   changes no measurement.
-- **The 2N2222A and the 220 Ω resistors are not needed.** They were on an early
-  parts list and never found a role — not in the probe method, which switches
-  nothing, and not in Probe-to-Photon, which reads a sensor that was already
-  wired. Documented as "do not buy" rather than left dangling as "reserved".
+- **The 2N2222A and the 220 Ω resistors are gone from the specification.** They
+  were on an early parts list and never found a role — not in the probe method,
+  which switches nothing, and not in Probe-to-Photon, which reads a sensor that
+  was already wired. Removed from the BOM, the wiring tables, both diagrams and
+  the bring-up rather than left as a dangling "reserved" row implying a plan
+  that does not exist. This entry is the only record that keeps them.
 - **Probe-to-Photon verified on hardware:** 40 clicks, ~16 ms median against
   ~3 ms for the same mouse in Probe-to-PC. The ~13 ms difference is the display
   pipeline *and* the KY-018's own response together, and is documented as such.

@@ -251,10 +251,6 @@ Expected failures, and what they mean:
 | `OPT_ERR:SEPARATION` | The two baselines are too close together |
 | `OPT_TIMEOUT` | No transition within 400 ms — the sensor is not looking at the target |
 
-The **2N2222A and the 220 Ω resistors are not used at all.** They were on an
-early parts list and the finished tester has no role for them, in this mode or
-any other. Leave them out.
-
 Read [README → Probe-to-Photon](../README.md#probe-to-photon) before quoting any
 number from this mode: the KY-018 is a photoresistor whose own response time is
 in the milliseconds, so this is a relative indicator, not a precision
@@ -277,8 +273,6 @@ click-to-photon benchmark.
   wire a transistor across its microswitch. The only mouse-side modification in
   this project is **removable** conductive copper tape on the outside of the left
   button.
-* **The 2N2222A and the 220 Ω resistors are not used at all.** There is no
-  wiring for them anywhere in this project. Leave them out.
 * Measured supply on USB: **≈ 4.8 V** between `VCC` and `GND`. Both the OLED and
   the KY-018 are fine at that level.
 

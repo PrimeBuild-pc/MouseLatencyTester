@@ -363,22 +363,14 @@ is planned.
 
 ## 11. Not implemented
 
-* **2N2222A transistor and the 220 Ω resistors** — **not used at all.** They
-  were on an early parts list; the finished tester has no role for them, and no
-  protocol, firmware or measurement mode references them.
-* **Probe-to-Photon mode** — specified, **not implemented**. No command byte, no
-  result token and no calibration exchange exist for it yet. Today the KY-018
-  provides the `LIGHT` telemetry value and nothing else.
-
-  The design is fixed (see
-  [README → Planned — Probe-to-Photon mode](../README.md#planned--probe-to-photon-mode)):
-  `t₀` is the same probe contact on `D2` as the Probe-to-PC path, `t₁` is the
-  first `A0` sample past a calibrated threshold, and latency is `t₁ − t₀`. It
-  will be a **separate mode** with its own commands and its own stored metric —
-  results are never mixed with Probe-to-PC — and it may not alter `probeISR()`
-  or the existing measurement block. The KY-018 is a prototype-grade LDR whose
-  response time is itself in the milliseconds, so this mode is a relative
-  indicator rather than a precision click-to-photon benchmark.
+* **Standalone calibration.** Both calibrations need the PC: the serial one by
+  definition, and the optical one because the PC is what paints the target.
+* **Long presses, double clicks and button chords.** Out of scope; one event per
+  press is the whole contract.
+* **A frame-rate cap on the optical target**, and anything that would let the
+  dashboard choose a DXGI flip model. See
+  [README → Roadmap](../README.md#roadmap) for why the second one cannot be done
+  honestly from a Tk window.
 
 ## 12. Probe-to-Photon sequence
 

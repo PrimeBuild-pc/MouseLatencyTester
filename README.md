@@ -157,13 +157,9 @@ changes no measurement.
 | 3 | **KY-018 light sensor** | ✅ Working, but **telemetry only**. Recorded with each run; it plays no part in any measurement |
 | 4 | **BTN1 / BTN2 buttons** | ✅ **Working. 10/10 acceptance test passed on hardware.** BTN1 enters/leaves test mode, BTN2 clears the live run outside test mode. Presses are still counted and logged |
 | 5 | **Probe-to-Photon mode** | ✅ **Working, firmware v1.5.** Separate mode, own calibration, own metric. Verified on hardware: 40 clicks, ~16 ms median against ~3 ms on the same mouse in Probe-to-PC. Accuracy is limited by the KY-018 — [read this](#probe-to-photon) before quoting a number |
-| 6 | 2N2222A transistor + 4 × 220 Ω | ❌ **Not needed. Do not buy them.** They turned out to have no role in the finished tester |
 
-**On the transistor and the resistors:** an early parts list included a 2N2222A and four 220 Ω
-resistors. The finished tester does not use them, and no future mode needs them either — the
-non-invasive probe method never switches anything, and Probe-to-Photon reads the KY-018 that was
-already wired. They are listed here only so anyone who bought the kit knows to leave them in the
-drawer. Nothing in this repository references them electrically.
+Every row is built and verified. There is no component in this project that is wired but unused, and
+none that is listed but unwired.
 
 ---
 
@@ -347,8 +343,6 @@ reproduced without any prior context.
 | — | **Soldering iron + solder** | Permanent joints on the probe lead and the tape lead | **Never used on the mouse itself** |
 | — | **Insulating tape** | Strain relief and shorts prevention | |
 | 1 | **Micro USB cable** | Power and serial | A data cable, not charge-only |
-| — | ~~2N2222A NPN transistor~~ | — | ❌ **Not needed.** Was on an early list; the finished tester has no use for it |
-| — | ~~220 Ω resistors~~ | — | ❌ **Not needed.** Same |
 
 > [!NOTE]
 > An earlier version of this project's parts list mentioned *two* OLED displays as a future upgrade.
@@ -367,8 +361,8 @@ reproduced without any prior context.
 
 Measured on USB power: **≈ 4.8 V** between `VCC` and `GND` at the breadboard rails.
 
-Everything in the list above is in the built tester. The two struck-through rows are there so a kit
-buyer knows they are not missing a step.
+This is the complete parts list. Everything in it is in the built tester, and nothing else is
+needed.
 
 </details>
 
@@ -466,8 +460,7 @@ build agree with each other.
                 BLU=KY-018 signal  WHT=probe  ORG=BTN1  PUR=BTN2
 
   Nothing is wired to the mouse other than removable copper tape on the outside
-  of the left button.  The 2N2222A and the 220 ohm resistors are NOT part of
-  this tester and are not needed at all.
+  of the left button.
 ```
 
 ```mermaid
@@ -525,7 +518,7 @@ Each step must pass before moving to the next.
 | 8 | **Test mode** | Overlay appears, `TESTMODE:ON`, OLED freezes, green ⇄ red tracks `ARMED`/`REARM` |
 | 9 | **BTN1 / BTN2** | 10 presses → **exactly 10** events, no phantoms, no doubles, no repeat while held. Then BTN1 enters/leaves test mode and BTN2 clears the run outside it |
 | 10 | **Probe-to-Photon** | Aim the KY-018 at the target, calibrate black then white, and check the separation is accepted. Then 10 presses → 10 `OPT:` samples |
-| 11 | **Done** | That is the whole bring-up. Nothing else needs wiring — in particular the 2N2222A and the 220 Ω resistors are not part of this tester |
+| 11 | **Done** | That is the whole bring-up. Nothing else needs wiring |
 
 Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 
@@ -543,8 +536,6 @@ Full detail with expected values: **[docs/wiring.md](docs/wiring.md)**.
 - **No external resistors on the buttons.** `INPUT_PULLUP` provides them; pull-downs break the logic.
 - **Never modify the mouse.** No opening it, no soldering to its PCB, no transistor across its
   microswitch. Removable copper tape on the outside of the button is the only mouse-side change.
-- **The 2N2222A and the 220 Ω resistors are not used at all.** Leave them out; there is no wiring
-  for them anywhere in this project.
 - Measured supply on USB: **≈ 4.8 V**. Both the OLED and the KY-018 are fine at that level.
 
 </details>
@@ -730,14 +721,73 @@ refuses to build if anything fails, then emits the installer and its SHA-256 int
 
 ## Roadmap
 
-The tester itself is done. What is left:
+The tester itself is done. What is left, in the order it makes sense to do it:
 
-- **A 3D-printed enclosure.** A box for the Teensy, the OLED, the KY-018 and the two buttons, with a
-  mount that holds the probe steady against the mouse button — probe alignment is the largest error
-  source in the whole method, and a printed jig fixes it better than a helping-hands clamp does.
-  The STL will live in this repository when it exists.
-- Nothing else is planned. The measurement path is verified and deliberately frozen; changes to it
-  need before/after numbers.
+### 1. A 3D-printed enclosure
+
+A box for the Teensy, the OLED, the KY-018 and the two buttons, with a mount that holds the probe
+steady against the mouse button — probe alignment is the largest error source in the whole method,
+and a printed jig fixes it better than a helping-hands clamp does. The STL will live in this
+repository when it exists. It changes no measurement.
+
+### 2. A frame-rate cap on the optical target
+
+Today the target repaints as soon as the click is seen. A real game presents on a frame cadence, so
+click-to-photon includes **waiting for the next frame** — on average half a frame time. Making the
+cap settable would let that contribution be measured instead of assumed.
+
+Worth doing, with its limits stated up front:
+
+| Cap | Frame time | Mean added wait |
+|---:|---:|---:|
+| 60 fps | 16.7 ms | ≈ 8.3 ms |
+| 120 fps | 8.3 ms | ≈ 4.2 ms |
+| 240 fps | 4.2 ms | ≈ 2.1 ms |
+| 360 fps | 2.8 ms | ≈ 1.4 ms |
+
+The **coarse** steps are measurable; the fine ones are not. 240 → 360 is a 0.7 ms difference in the
+mean, which is below the KY-018's own noise, and a Tk window throttled with `after()` has no vsync
+and inherits the Windows timer granularity, so it reproduces a *cadence* rather than a real present
+path. Expect it to be honest at 30/60/120 and increasingly notional above that.
+
+### 3. Not planned: choosing a flip model
+
+A dropdown for Independent Flip / DirectFlip / composed flip would be a lie. The flip model is a
+property of a **DXGI swap chain** plus DWM's own decision about whether the window qualifies; a
+Tk window is GDI-backed and composed, and nothing in this application can select otherwise. Doing
+it properly means a separate native tool with a real D3D swap chain in borderless-fullscreen or
+exclusive mode — a different program, not a setting.
+
+The same question is better answered by the next item, which uses whatever flip model the game
+already uses.
+
+### 4. In-game measurement
+
+Calibrate the sensor on a repeatable in-game event — a muzzle flash — then measure click to flash
+during normal play. This is the most useful of the four and the only one that needs firmware work.
+
+What makes it harder than the desktop target:
+
+- **The scene moves.** An absolute threshold taken from one dark sample false-triggers on
+  explosions, HUD flashes and ordinary brightness changes. It needs a **rising edge** with a minimum
+  slope and a minimum excursion above a rolling baseline, not a fixed level.
+- **Calibration becomes a ritual**: hold still without firing to capture the baseline, then fire a
+  few times to capture the excursion, and derive the trigger from the two.
+- **The number includes the game's weapon animation.** If a title draws the flash two frames after
+  the input is consumed, those two frames are in the measurement and they are game design, not
+  latency. Figures are comparable **between runs of the same weapon in the same title**, and nowhere
+  else.
+
+`t₀` does not change: it stays the probe contact in the same ISR, as it has since v1.0.
+
+### The sensor is now the limit
+
+A 360 Hz OLED settles in microseconds. The KY-018 does not — it is a photoresistor with a
+millisecond response, and at this point it is the largest unknown in the whole chain, larger than a
+frame at any refresh rate worth testing. Items 2 and 4 will both give better numbers with a fast
+photodiode (BPW34, BPV10 or similar) and a transimpedance amplifier in place of the KY-018: a few
+euro of parts, response in microseconds, and the same `A0` pin. That upgrade is worth more than any
+software change on this list.
 
 ## Contributing
 
