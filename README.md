@@ -6,20 +6,21 @@
 
 <br>
 
-[![Latest release](https://img.shields.io/github/v/release/PrimeBuild-pc/MouseLatencyTester?style=for-the-badge&logo=github&label=latest&color=5b9cff)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/PrimeBuild-pc/MouseLatencyTester/total?style=for-the-badge&logo=github&label=downloads&color=4ade80)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases)
-[![Latest downloads](https://img.shields.io/github/downloads/PrimeBuild-pc/MouseLatencyTester/latest/total?style=for-the-badge&label=latest%20downloads&color=4ade80)](https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest)
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/PrimeBuild-pc/MouseLatencyTester?style=plastic&amp;logo=git&amp;logoColor=white"></a>
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/PrimeBuild-pc/MouseLatencyTester?style=plastic&amp;logo=github"></a>
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/PrimeBuild-pc/MouseLatencyTester?style=plastic&amp;logo=github"></a>
 
-[![Tests](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/tests.yml?branch=main&style=flat-square&logo=github&label=tests)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/codeql.yml?branch=main&style=flat-square&logo=github&label=CodeQL)](https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml)
-[![Coverage](https://img.shields.io/badge/core%20coverage-87%25-4ade80?style=flat-square)](#development)
-[![Tests count](https://img.shields.io/badge/tests-246-4ade80?style=flat-square)](tests)
-[![Licence](https://img.shields.io/github/license/PrimeBuild-pc/MouseLatencyTester?style=flat-square&color=fbbf24)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-5b9cff?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-5b9cff?style=flat-square&logo=windows&logoColor=white)](docs/installation_windows.md)
-[![Languages](https://img.shields.io/badge/UI%20languages-8-a78bfa?style=flat-square)](#languages)
-[![Firmware](https://img.shields.io/badge/firmware-v1.4-fbbf24?style=flat-square&logo=arduino&logoColor=white)](firmware)
-[![Hardware](https://img.shields.io/badge/hardware-assembled%20%26%20verified-4ade80?style=flat-square)](#hardware)
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/PrimeBuild-pc/MouseLatencyTester?style=plastic&amp;logo=github&amp;label=release"></a>
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/PrimeBuild-pc/MouseLatencyTester/total?style=plastic&amp;logo=github&amp;label=downloads&amp;color=4ade80"></a>
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/tests.yml"><img alt="Tests" src="https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/tests.yml?branch=main&amp;style=plastic&amp;logo=githubactions&amp;label=tests"></a>
+<a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://img.shields.io/github/actions/workflow/status/PrimeBuild-pc/MouseLatencyTester/codeql.yml?branch=main&amp;style=plastic&amp;logo=github&amp;label=CodeQL"></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/PrimeBuild-pc/MouseLatencyTester?style=plastic"></a>
+
+<a href="pyproject.toml"><img alt="Python 3.10 or newer" src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=plastic&amp;logo=python&amp;logoColor=white"></a>
+<a href="docs/installation_windows.md"><img alt="Windows 10 and 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?style=plastic&amp;logo=windows&amp;logoColor=white"></a>
+<a href="#languages"><img alt="Eight UI languages" src="https://img.shields.io/badge/UI%20languages-8-a78bfa?style=plastic&amp;logo=googletranslate&amp;logoColor=white"></a>
+<a href="firmware"><img alt="Firmware 1.4" src="https://img.shields.io/badge/firmware-v1.4-fbbf24?style=plastic&amp;logo=arduino&amp;logoColor=white"></a>
+<a href="#hardware"><img alt="Hardware assembled and verified" src="https://img.shields.io/badge/hardware-assembled%20%26%20verified-4ade80?style=plastic"></a>
 
 <br>
 
@@ -31,7 +32,7 @@ and the difference is your real input latency. Archive it, chart it, compare it.
 <br>
 
 <a href="https://github.com/PrimeBuild-pc/MouseLatencyTester/releases/latest">
-<img src="https://img.shields.io/badge/%E2%AC%87%20Download%20for%20Windows-5b9cff?style=for-the-badge&logoColor=white" alt="Download for Windows" height="42">
+<img src="https://img.shields.io/badge/%E2%AC%87%20Download%20for%20Windows-5b9cff?style=plastic&amp;logoColor=white" alt="Download for Windows" height="32">
 </a>
 
 <sub>No hardware yet? The app ships a built-in simulator — <b>Settings → Demo mode</b>.</sub>
