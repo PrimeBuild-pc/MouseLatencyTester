@@ -12,6 +12,8 @@ Questo percorso raccoglie la ricerca e la documentazione del PCB compatto. Firmw
 | Progetto portabile KiCad 9 | [mouse_latency_tester.kicad_pro](../../outputs/MouseLatencyTester-A1/Consegna-A1/KiCad/mouse_latency_tester.kicad_pro) |
 | Montaggio e collegamenti | [MONTAGGIO](../../outputs/MouseLatencyTester-A1/Consegna-A1/Documentazione/MONTAGGIO.md) |
 | Verifiche e limiti | [VERIFICHE](../../outputs/MouseLatencyTester-A1/Consegna-A1/Documentazione/VERIFICHE.md) |
+| Render 3D (progetto, non foto) | [iso sopra](../images/hardware/pcb-a1b-iso-top.png), [iso sotto](../images/hardware/pcb-a1b-iso-bottom.png), [sopra](../images/hardware/pcb-a1b-top.png), [sotto](../images/hardware/pcb-a1b-bottom.png); rigenerabili con [render_3d.py](../../hardware/compact/render_3d.py) |
+| Modello STEP per il case | [mouse_latency_tester.step](../../hardware/compact/mechanical/mouse_latency_tester.step) (Teensy 2.0 senza modello 3D) |
 | Sorgenti di lavoro KiCad 10.99 e script | [hardware/compact](../../hardware/compact/) |
 | Prima bozza del solo front-end | [hardware/optical-front-end](../../hardware/optical-front-end/) |
 | Librerie e licenze originali | [hardware/sources](../../hardware/sources/) |

@@ -51,6 +51,26 @@ schematic, fabrication files, BOM and assembly instructions. The new optical boa
 firmware and the enclosure are still pending. This is separate from the existing assembled
 tester described below.
 
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="docs/images/hardware/pcb-a1b-iso-top.png" alt="3D render of the A1b PCB, top side" width="100%"><br>
+<sub><b>Top</b> — OPA380 TIA, TLV3501 comparator, threshold trimmer, BTN1/BTN2</sub>
+</td>
+<td width="50%" align="center">
+<img src="docs/images/hardware/pcb-a1b-iso-bottom.png" alt="3D render of the A1b PCB, bottom side" width="100%"><br>
+<sub><b>Bottom</b> — the BPV10 photodiode faces the monitor</sub>
+</td>
+</tr>
+</table>
+
+<div align="center">
+<sub><b>KiCad 3D render of the A1b design (56 × 48 mm), not a photo:</b> the board has not been built or tested yet.
+The Teensy 2.0 has no 3D model, so only its header pads show; the photodiode is drawn with a generic 5 mm LED model.
+Flat <a href="docs/images/hardware/pcb-a1b-top.png">top</a> and <a href="docs/images/hardware/pcb-a1b-bottom.png">bottom</a> views and a
+<a href="hardware/compact/mechanical/mouse_latency_tester.step">STEP model</a> for the enclosure are in the repo.</sub>
+</div>
+
 ## Gallery
 
 <div align="center">
@@ -162,7 +182,8 @@ response out of the measurement — on a 360 Hz OLED the KY-018 is now the large
 the chain. Design and BOM: **[docs/optical_front_end.md](docs/optical_front_end.md)**.
 
 An **enclosure** is the other open item: a 3D-printed box for the whole thing, with a mount that
-holds the probe steady. That one changes no measurement.
+holds the probe steady. That one changes no measurement. The compact board's
+[STEP model](hardware/compact/mechanical/mouse_latency_tester.step) is its starting point.
 
 #### Feature maturity
 
