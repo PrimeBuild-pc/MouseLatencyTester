@@ -164,7 +164,7 @@ class LatencyCompanion:
                     self.ser.write(b'H\n')
                     self.ser.flush()
                 else:
-                    print("  [WARN] click non rilevato entro 1s — invio H comunque")
+                    print("  [WARN] click not detected within 1s — sending H anyway")
                     self.ser.write(b'H\n')
                     self.ser.flush()
 

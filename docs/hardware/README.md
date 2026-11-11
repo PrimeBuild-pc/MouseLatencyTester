@@ -1,33 +1,33 @@
-# PCB compatto A1b / BPV10
+# Compact PCB A1b / BPV10
 
-Questo percorso raccoglie la ricerca e la documentazione del PCB compatto. Firmware, dashboard e hardware sono ora nella stessa cartella di progetto.
+This section collects the research and documentation for the compact PCB. Firmware, dashboard and hardware now live in the same project folder.
 
-## File principali
+## Main files
 
-| Contenuto | Percorso |
+| Content | Path |
 |---|---|
-| Pacchetto per PCBWay, Gerber e forature | [MouseLatencyTester-A1-PCBWay.zip](../../outputs/MouseLatencyTester-A1/MouseLatencyTester-A1-PCBWay.zip) |
-| Pacchetto completo | [MouseLatencyTester-A1-Progetto.zip](../../outputs/MouseLatencyTester-A1/MouseLatencyTester-A1-Progetto.zip) |
-| Istruzioni di consegna | [LEGGIMI](../../outputs/MouseLatencyTester-A1/Consegna-A1/LEGGIMI.md) |
-| Progetto portabile KiCad 9 | [mouse_latency_tester.kicad_pro](../../outputs/MouseLatencyTester-A1/Consegna-A1/KiCad/mouse_latency_tester.kicad_pro) |
-| Montaggio e collegamenti | [MONTAGGIO](../../outputs/MouseLatencyTester-A1/Consegna-A1/Documentazione/MONTAGGIO.md) |
-| Verifiche e limiti | [VERIFICHE](../../outputs/MouseLatencyTester-A1/Consegna-A1/Documentazione/VERIFICHE.md) |
-| Render 3D (progetto, non foto) | [iso sopra](../images/hardware/pcb-a1b-iso-top.png), [iso sotto](../images/hardware/pcb-a1b-iso-bottom.png), [sopra](../images/hardware/pcb-a1b-top.png), [sotto](../images/hardware/pcb-a1b-bottom.png); rigenerabili con [render_3d.py](../../hardware/compact/render_3d.py) |
-| Modello STEP per il case | [mouse_latency_tester.step](../../hardware/compact/mechanical/mouse_latency_tester.step) (Teensy 2.0 senza modello 3D) |
-| Sorgenti di lavoro KiCad 10.99 e script | [hardware/compact](../../hardware/compact/) |
-| Prima bozza del solo front-end | [hardware/optical-front-end](../../hardware/optical-front-end/) |
-| Librerie e licenze originali | [hardware/sources](../../hardware/sources/) |
+| PCBWay package, Gerbers and drill files | [MouseLatencyTester-A1-PCBWay.zip](../../outputs/MouseLatencyTester-A1/MouseLatencyTester-A1-PCBWay.zip) |
+| Complete package | [MouseLatencyTester-A1-Project.zip](../../outputs/MouseLatencyTester-A1/MouseLatencyTester-A1-Project.zip) |
+| Delivery instructions | [README](../../outputs/MouseLatencyTester-A1/Delivery-A1/README.md) |
+| Portable KiCad 9 project | [mouse_latency_tester.kicad_pro](../../outputs/MouseLatencyTester-A1/Delivery-A1/KiCad/mouse_latency_tester.kicad_pro) |
+| Assembly and connections | [ASSEMBLY](../../outputs/MouseLatencyTester-A1/Delivery-A1/Documentation/ASSEMBLY.md) |
+| Verification and limits | [VERIFICATION](../../outputs/MouseLatencyTester-A1/Delivery-A1/Documentation/VERIFICATION.md) |
+| 3D renders (design, not photos) | [iso top](../images/hardware/pcb-a1b-iso-top.png), [iso bottom](../images/hardware/pcb-a1b-iso-bottom.png), [top](../images/hardware/pcb-a1b-top.png), [bottom](../images/hardware/pcb-a1b-bottom.png); regenerable with [render_3d.py](../../hardware/compact/render_3d.py) |
+| STEP model for the case | [mouse_latency_tester.step](../../hardware/compact/mechanical/mouse_latency_tester.step) (Teensy 2.0 without a 3D model) |
+| KiCad 10.99 working sources and scripts | [hardware/compact](../../hardware/compact/) |
+| First draft of the front-end only | [hardware/optical-front-end](../../hardware/optical-front-end/) |
+| Original libraries and licences | [hardware/sources](../../hardware/sources/) |
 
-La copia di lavoro e l'esportazione per KiCad 9 hanno formati diversi e ruoli distinti. La copia portabile mantenuta è quella in `Consegna-A1/KiCad`; non occorrono altre cartelle `KiCad9` o `KiCad9-Final`.
+The working copy and the KiCad 9 export have different formats and distinct roles. The portable copy that is maintained is the one in `Delivery-A1/KiCad`; no other `KiCad9` or `KiCad9-Final` folders are needed.
 
-## Ricerca e componenti
+## Research and components
 
-- [Decisioni progettuali e alternative](recommendation.md).
-- [Componenti acquistati e integrazioni](purchased-components.md).
-- [Verifica dei datasheet ottici](optical-datasheet-audit.md).
-- [Confronto OpenLDAT](open-ldat-comparison.md).
-- [Quote Teensy 2.0](teensy20-dimensions.png) e [pinout](teensy20-pinout.png).
+- [Design decisions and alternatives](recommendation.md).
+- [Purchased components and additions](purchased-components.md).
+- [Optical datasheet audit](optical-datasheet-audit.md).
+- [OpenLDAT comparison](open-ldat-comparison.md).
+- [Teensy 2.0 dimensions](teensy20-dimensions.png) and [pinout](teensy20-pinout.png).
 
-**Stato:** PCB 56 × 48 mm, due layer, revisione A1b dell'11 novembre 2026 (R3 = 1 MΩ, foro di D1 da 1,0 mm, serigrafie; motivi in [VERIFICHE](../../outputs/MouseLatencyTester-A1/Consegna-A1/Documentazione/VERIFICHE.md)). ERC/DRC e confronto schema-PCB superati. Il circuito non è stato costruito o collaudato. Restano firmware per il comparatore, verifica temporale e case. Gli script storici che creano la prima bozza non vanno usati per rigenerare il progetto esistente.
+**Status:** 56 × 48 mm PCB, two layers, revision A1b of 11 November 2026 (R3 = 1 MΩ, D1 hole 1.0 mm, silkscreen; reasons in [VERIFICATION](../../outputs/MouseLatencyTester-A1/Delivery-A1/Documentation/VERIFICATION.md)). ERC/DRC and schematic-PCB comparison passed. The circuit has not been built or tested. Still to do: comparator firmware, timing verification and case. The historical scripts that create the first draft must not be used to regenerate the existing project.
 
-Per il produttore usare esclusivamente lo ZIP PCBWay. Il pacchetto completo comprende documentazione, sorgenti e rapporti, quindi non è lo ZIP da caricare come Gerber.
+For the manufacturer use only the PCBWay ZIP. The complete package includes documentation, sources and reports, so it is not the ZIP to upload as Gerbers.

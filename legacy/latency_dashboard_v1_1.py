@@ -82,7 +82,7 @@ class LatencyDashboard:
         self.test_session_count = 0
         self.test_complete = False
 
-        self.connection_var = tk.StringVar(value="DISCONNESSO")
+        self.connection_var = tk.StringVar(value="DISCONNECTED")
         self.state_var = tk.StringVar(value="READY")
         self.port_var = tk.StringVar()
         self.last_var = tk.StringVar(value="—")
@@ -121,18 +121,18 @@ class LatencyDashboard:
         outer.pack(fill="both", expand=True)
 
         # Connection bar
-        conn = ttk.LabelFrame(outer, text=" Connessione ", padding=10)
+        conn = ttk.LabelFrame(outer, text=" Connection ", padding=10)
         conn.pack(fill="x")
 
-        ttk.Label(conn, text="Porta:").pack(side="left")
+        ttk.Label(conn, text="Port:").pack(side="left")
         self.port_combo = ttk.Combobox(conn, textvariable=self.port_var, width=34, state="readonly")
         self.port_combo.pack(side="left", padx=(8, 8))
 
-        ttk.Button(conn, text="Aggiorna", command=lambda: self.refresh_ports(False)).pack(side="left", padx=4)
-        self.connect_btn = ttk.Button(conn, text="Connetti", command=self.toggle_connection)
+        ttk.Button(conn, text="Refresh", command=lambda: self.refresh_ports(False)).pack(side="left", padx=4)
+        self.connect_btn = ttk.Button(conn, text="Connect", command=self.toggle_connection)
         self.connect_btn.pack(side="left", padx=4)
 
-        ttk.Label(conn, text="Stato:").pack(side="left", padx=(24, 6))
+        ttk.Label(conn, text="Status:").pack(side="left", padx=(24, 6))
         self.conn_status = ttk.Label(conn, textvariable=self.connection_var)
         self.conn_status.pack(side="left")
 
@@ -149,12 +149,12 @@ class LatencyDashboard:
         right.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
 
         # Metrics
-        metrics = ttk.LabelFrame(left, text=" Misure ", padding=12)
+        metrics = ttk.LabelFrame(left, text=" Measurements ", padding=12)
         metrics.pack(fill="x")
 
         top_metric = ttk.Frame(metrics)
         top_metric.pack(fill="x")
-        ttk.Label(top_metric, text="ULTIMA", font=("Segoe UI", 11, "bold")).pack(anchor="center")
+        ttk.Label(top_metric, text="LAST", font=("Segoe UI", 11, "bold")).pack(anchor="center")
         ttk.Label(top_metric, textvariable=self.last_var, font=("Segoe UI", 34, "bold")).pack(anchor="center")
         ttk.Label(top_metric, text="ms").pack(anchor="center")
 
@@ -163,20 +163,20 @@ class LatencyDashboard:
         for c in range(4):
             grid.columnconfigure(c, weight=1)
 
-        self._metric_cell(grid, 0, "MEDIA", self.avg_var)
+        self._metric_cell(grid, 0, "MEAN", self.avg_var)
         self._metric_cell(grid, 1, "MIN", self.min_var)
         self._metric_cell(grid, 2, "MAX", self.max_var)
-        self._metric_cell(grid, 3, "CAMPIONI", self.n_var)
+        self._metric_cell(grid, 3, "SAMPLES", self.n_var)
 
         # Sparkline
-        chart_box = ttk.LabelFrame(left, text=" Ultimi campioni ", padding=8)
+        chart_box = ttk.LabelFrame(left, text=" Latest samples ", padding=8)
         chart_box.pack(fill="both", expand=True, pady=(12, 0))
         self.chart = tk.Canvas(chart_box, height=220, highlightthickness=0)
         self.chart.pack(fill="both", expand=True)
         self.chart.bind("<Configure>", lambda _e: self._draw_chart())
 
         # Controls / status
-        status = ttk.LabelFrame(right, text=" Controlli ", padding=12)
+        status = ttk.LabelFrame(right, text=" Controls ", padding=12)
         status.pack(fill="x")
 
         info = ttk.Frame(status)
@@ -193,42 +193,42 @@ class LatencyDashboard:
         buttons.columnconfigure(0, weight=1)
         buttons.columnconfigure(1, weight=1)
 
-        self.cal_btn = ttk.Button(buttons, text="Calibra", command=self.calibrate)
+        self.cal_btn = ttk.Button(buttons, text="Calibrate", command=self.calibrate)
         self.cal_btn.grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=4)
 
         self.reset_btn = ttk.Button(buttons, text="Reset", command=self.reset_stats)
         self.reset_btn.grid(row=0, column=1, sticky="ew", padx=(4, 0), pady=4)
 
-        ttk.Button(buttons, text="Richiedi stats", command=lambda: self.send_command("S")).grid(
+        ttk.Button(buttons, text="Request stats", command=lambda: self.send_command("S")).grid(
             row=1, column=0, sticky="ew", padx=(0, 4), pady=4
         )
-        ttk.Button(buttons, text="Leggi luce", command=lambda: self.send_command("L")).grid(
+        ttk.Button(buttons, text="Read light", command=lambda: self.send_command("L")).grid(
             row=1, column=1, sticky="ew", padx=(4, 0), pady=4
         )
 
         test_opts = ttk.Frame(status)
         test_opts.pack(fill="x", pady=(10, 0))
-        ttk.Label(test_opts, text="Target campioni:").pack(side="left")
+        ttk.Label(test_opts, text="Sample target:").pack(side="left")
         ttk.Spinbox(test_opts, from_=1, to=500, textvariable=self.target_samples_var, width=6).pack(side="left", padx=(6, 16))
-        ttk.Checkbutton(test_opts, text="Reset all'ingresso", variable=self.auto_reset_var).pack(side="left")
+        ttk.Checkbutton(test_opts, text="Reset on entry", variable=self.auto_reset_var).pack(side="left")
 
-        self.test_btn = ttk.Button(status, text="ENTRA IN TEST MODE", command=self.enter_test_mode)
+        self.test_btn = ttk.Button(status, text="ENTER TEST MODE", command=self.enter_test_mode)
         self.test_btn.pack(fill="x", pady=(10, 6), ipady=10)
 
         ttk.Label(
             status,
-            text="In Test Mode l'OLED viene congelato: niente campioni persi per refresh.\n"
-                 "VERDE = puoi premere, ROSSO = attendi/rilascia.\n"
-                 "Premi ESC per uscire.",
+            text="In Test Mode the OLED is frozen: no samples lost to display refresh.\n"
+                 "GREEN = you can press, RED = wait/release.\n"
+                 "Premi ESC to exit.",
             justify="center",
         ).pack(fill="x", pady=(0, 8))
 
-        export_box = ttk.LabelFrame(right, text=" Sessione ", padding=10)
+        export_box = ttk.LabelFrame(right, text=" Session ", padding=10)
         export_box.pack(fill="x", pady=(12, 0))
-        ttk.Button(export_box, text="Esporta CSV", command=self.export_csv).pack(fill="x")
+        ttk.Button(export_box, text="Export CSV", command=self.export_csv).pack(fill="x")
 
         # Log
-        log_box = ttk.LabelFrame(right, text=" Eventi ", padding=8)
+        log_box = ttk.LabelFrame(right, text=" Events ", padding=8)
         log_box.pack(fill="both", expand=True, pady=(12, 0))
 
         self.log = tk.Text(log_box, height=12, wrap="word", state="disabled", font=("Consolas", 9))
@@ -306,16 +306,16 @@ class LatencyDashboard:
 
         device = self._selected_device()
         if not device:
-            messagebox.showwarning("Latency Tester", "Nessuna porta seriale selezionata.")
+            messagebox.showwarning("Latency Tester", "No serial port selected.")
             return
 
         try:
             self.ser = serial.Serial(device, BAUD_RATE, timeout=0.10)
             self.connected = True
-            self.connection_var.set(f"CONNESSO — {device}")
-            self.connect_btn.configure(text="Disconnetti")
+            self.connection_var.set(f"CONNECTED — {device}")
+            self.connect_btn.configure(text="Disconnect")
             self._set_controls_state()
-            self.log_line(f"Connesso a {device}")
+            self.log_line(f"Connected to {device}")
 
             self.serial_thread = threading.Thread(target=self._serial_loop, daemon=True)
             self.serial_thread.start()
@@ -326,19 +326,19 @@ class LatencyDashboard:
             self.root.after(1000, lambda: self.send_command("L"))
 
         except serial.SerialException as exc:
-            self.connection_var.set("PORTA OCCUPATA / ERRORE")
+            self.connection_var.set("PORT BUSY / ERROR")
             messagebox.showerror(
-                "Impossibile aprire la Teensy",
+                "Cannot open the Teensy",
                 f"{exc}\n\n"
-                "Chiudi Arduino Serial Monitor e il vecchio latency_companion.py,\n"
-                "poi premi Aggiorna e riprova."
+                "Close the Arduino Serial Monitor and the old latency_companion.py,\n"
+                "then press Refresh and try again."
             )
 
     def disconnect(self):
         self.connected = False
         self.calibrating = False
-        self.connection_var.set("DISCONNESSO")
-        self.connect_btn.configure(text="Connetti")
+        self.connection_var.set("DISCONNECTED")
+        self.connect_btn.configure(text="Connect")
         self._set_controls_state()
 
         ser = self.ser
@@ -497,7 +497,7 @@ class LatencyDashboard:
             return
 
         if line.startswith("PC_SYNCED"):
-            self.events.put(("log", "Calibrazione sincronizzata"))
+            self.events.put(("log", "Calibration synchronised"))
             return
 
         self.events.put(("log", line))
@@ -537,7 +537,7 @@ class LatencyDashboard:
 
         self.calibrating = True
         self.state_var.set("CALIBRATING")
-        self.log_line("Avvio calibrazione…")
+        self.log_line("Starting calibration…")
 
         if not self.send_command("C"):
             self.calibrating = False
@@ -584,7 +584,7 @@ class LatencyDashboard:
 
         self.overlay_hint_label = tk.Label(
             frame,
-            text="ATTENDI — preparazione\nVERDE = premi  •  ROSSO = attendi",
+            text="WAIT — preparing\nGREEN = press  •  RED = wait",
             font=("Segoe UI", 16, "bold"),
             justify="center",
             name="hint",
@@ -592,7 +592,7 @@ class LatencyDashboard:
         self.overlay_hint_label.pack()
 
         self.overlay_state_label = tk.Label(
-            frame, text="PREPARAZIONE", font=("Segoe UI", 20, "bold"), name="state"
+            frame, text="PREPARING", font=("Segoe UI", 20, "bold"), name="state"
         )
         self.overlay_state_label.pack(pady=(45, 8))
 
@@ -616,7 +616,7 @@ class LatencyDashboard:
         )
         self.overlay_n_label.pack(side="left", padx=30)
 
-        tk.Label(frame, text="ESC per uscire", font=("Segoe UI", 12), name="esc").pack(pady=12)
+        tk.Label(frame, text="ESC to exit", font=("Segoe UI", 12), name="esc").pack(pady=12)
 
         self._set_overlay_mode("wait")
         win.focus_force()
@@ -635,16 +635,16 @@ class LatencyDashboard:
 
         if mode == "armed":
             bg = "#14532d"
-            state = "PRONTO — PREMI"
-            hint = "VERDE = puoi premere\nUn click alla volta"
+            state = "READY — PRESS"
+            hint = "GREEN = you can press\nOne click at a time"
         elif mode == "complete":
             bg = "#1e3a8a"
-            state = "TEST COMPLETATO"
-            hint = "Target raggiunto — non premere ancora\nESC per tornare alla dashboard"
+            state = "TEST COMPLETE"
+            hint = "Target reached — do not press again\nESC to return to the dashboard"
         else:
             bg = "#7f1d1d"
-            state = "ATTENDI"
-            hint = "ROSSO = non premere\nRilascia il tasto e attendi il verde"
+            state = "WAIT"
+            hint = "RED = do not press\nRelease the button and wait for green"
 
         fg = "white"
         self.overlay_frame.configure(bg=bg)
@@ -692,15 +692,15 @@ class LatencyDashboard:
 
     def export_csv(self):
         if not self.samples:
-            messagebox.showinfo("Esporta CSV", "Non ci sono ancora misure nella sessione.")
+            messagebox.showinfo("Export CSV", "There are no measurements in the session yet.")
             return
 
         default_name = f"latency_session_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         path = filedialog.asksaveasfilename(
-            title="Esporta sessione",
+            title="Export session",
             defaultextension=".csv",
             initialfile=default_name,
-            filetypes=[("CSV", "*.csv"), ("Tutti i file", "*.*")],
+            filetypes=[("CSV", "*.csv"), ("All files", "*.*")],
         )
         if not path:
             return
@@ -721,7 +721,7 @@ class LatencyDashboard:
                     "sample_n": sample["n"],
                 })
 
-        self.log_line(f"CSV esportato: {path}")
+        self.log_line(f"CSV exported: {path}")
 
     # ---------------- Event -> GUI ----------------
 
@@ -768,7 +768,7 @@ class LatencyDashboard:
                 self.cal_var.set(f'{payload["calib"]} µs')
                 self.state_var.set("READY")
                 self.log_line(
-                    f'Calibrazione OK: {payload["calib"]} µs '
+                    f'Calibration OK: {payload["calib"]} µs '
                     f'({payload["samples"]} campioni, RT medio {payload["avg_rt"]} µs)'
                 )
 
@@ -789,7 +789,7 @@ class LatencyDashboard:
                 self.max_var.set("—")
                 self.n_var.set("0")
                 self.state_var.set("READY")
-                self.log_line("Statistiche azzerate")
+                self.log_line("Statistics reset")
                 self._draw_chart()
 
             elif kind == "skip":
@@ -798,8 +798,8 @@ class LatencyDashboard:
                 except ValueError:
                     count = 1
                 self.skipped_var.set(str(count))
-                self.state_var.set("SKIP OLED — RIPROVA")
-                self.log_line("Campione scartato: click durante refresh OLED")
+                self.state_var.set("SKIP OLED — RETRY")
+                self.log_line("Sample discarded: click during OLED refresh")
                 if self.test_mode and not self.test_complete:
                     self._set_overlay_mode("wait")
 
@@ -817,14 +817,14 @@ class LatencyDashboard:
                 self.state_var.set("TEST MODE")
                 if self.test_mode and not self.test_complete:
                     self._set_overlay_mode("wait")
-                self.log_line("Test Mode: OLED congelato")
+                self.log_line("Test Mode: OLED frozen")
 
             elif kind == "testmode_off":
                 self.state_var.set("READY")
-                self.log_line("Test Mode terminato: OLED riattivato")
+                self.log_line("Test Mode ended: OLED resumed")
 
             elif kind == "abort":
-                self.log_line("Pressione annullata: nessun nuovo click OS")
+                self.log_line("Press cancelled: no new OS click")
 
             elif kind == "drop":
                 self.log_line(payload)
@@ -841,7 +841,7 @@ class LatencyDashboard:
                 self.log_line(payload)
 
             elif kind == "serial_error":
-                self.log_line("Errore seriale: " + payload)
+                self.log_line("Serial error: " + payload)
                 self.disconnect()
 
             self._refresh_overlay()
@@ -883,7 +883,7 @@ class LatencyDashboard:
 
         vals = [s["last"] for s in self.samples[-60:]]
         if not vals:
-            c.create_text(width / 2, height / 2, text="Nessun campione", anchor="center")
+            c.create_text(width / 2, height / 2, text="No samples", anchor="center")
             return
 
         vmin = min(vals)

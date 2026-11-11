@@ -6,7 +6,7 @@ Kept verbatim, still runnable, still reading the **same** database at
 | File | Notes |
 |---|---|
 | `LatencyTester_Dashboard_v2.py` | The known-good single-file dashboard this project was refactored from. Reference implementation of the measurement pipeline |
-| `LatencyTester_Dashboard_v2_GUIDA.md` | Its Italian user guide |
+| `LatencyTester_Dashboard_v2_GUIDE.md` | Its user guide |
 | `latency_dashboard_v1_1.py` | Earlier single-file dashboard |
 
 The schema v1 migration only *adds* columns, so v2 keeps working after the new

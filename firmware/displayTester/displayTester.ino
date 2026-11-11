@@ -21,7 +21,7 @@ void setup() {
 }
 
 void loop() {
-  // Media di 16 letture per rendere il valore più stabile
+  // Average 16 readings to make the value more stable
   long somma = 0;
 
   for (int i = 0; i < 16; i++) {

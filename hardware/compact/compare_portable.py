@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 from cad import kicad_pcb,kicad_sch
 root=Path(__file__).resolve().parent
-portable=root.parents[1]/'outputs/MouseLatencyTester-A1/Consegna-A1/KiCad'
+portable=root.parents[1]/'outputs/MouseLatencyTester-A1/Delivery-A1/KiCad'
 def signature(path):
     b=kicad_pcb.read(path/'mouse_latency_tester.kicad_pcb')
     s=kicad_sch.read(path/'mouse_latency_tester.kicad_sch')

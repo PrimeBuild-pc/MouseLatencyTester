@@ -227,13 +227,13 @@ read from the KY-018 already on `A0`. What changes is where you point the sensor
    full-screen target appears. Two or three centimetres away, facing it square
    on, taped or clamped so it cannot drift. Shade it from the room lamp if you
    can.
-3. Press **Calibra sul bersaglio a schermo intero**. A centred full-screen
+3. Press **Calibrate on the full-screen target**. A centred full-screen
    target appears and takes both baselines by itself: black, 400 ms settle,
    sample; white, 400 ms settle, sample. **Do not move the sensor.** It shows
    the result and closes. About a second and a half.
 4. If the two baselines are less than **60 counts** apart it stops at
-   `CALIBRAZIONE FALLITA`, reports the numbers it measured, and stays on screen
-   with a live `LUCE` reading. Move the sensor until that number swings between
+   `CALIBRATION FAILED`, reports the numbers it measured, and stays on screen
+   with a live `LIGHT` reading. Move the sensor until that number swings between
    the black and the white phase, then press Enter to retry or Esc to give up.
    **If the reading barely moves, the sensor is not on the target** — that is
    what this readout is for.

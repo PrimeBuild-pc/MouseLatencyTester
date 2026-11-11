@@ -152,7 +152,7 @@ class LatencyDB:
         self.conn.execute("PRAGMA foreign_keys = ON")
         self._init_schema()
         if not self.list_devices():
-            self.create_device("Mouse non nominato", "", "", "")
+            self.create_device("Unnamed mouse", "", "", "")
 
     def _init_schema(self):
         self.conn.executescript(
@@ -350,7 +350,7 @@ class LatencyDashboard:
         self.overlay_n_label = None
 
         # Connection vars
-        self.connection_var = tk.StringVar(value="DISCONNESSO")
+        self.connection_var = tk.StringVar(value="DISCONNECTED")
         self.port_var = tk.StringVar()
         self.state_var = tk.StringVar(value="READY")
         self.cal_var = tk.StringVar(value="0 µs")
@@ -387,8 +387,8 @@ class LatencyDashboard:
         self.dev_model_var = tk.StringVar()
 
         # Compare vars
-        self.compare_chart_type = tk.StringVar(value="Campioni")
-        self.compare_status_var = tk.StringVar(value="Seleziona almeno due sessioni per confrontarle.")
+        self.compare_chart_type = tk.StringVar(value="Samples")
+        self.compare_status_var = tk.StringVar(value="Select at least two sessions to compare them.")
 
         self._build_ui()
 
@@ -417,21 +417,21 @@ class LatencyDashboard:
         outer = ttk.Frame(self.root, padding=10)
         outer.pack(fill="both", expand=True)
 
-        conn = ttk.LabelFrame(outer, text=" Connessione Teensy ", padding=8)
+        conn = ttk.LabelFrame(outer, text=" Teensy connection ", padding=8)
         conn.pack(fill="x")
 
-        ttk.Label(conn, text="Porta:").pack(side="left")
+        ttk.Label(conn, text="Port:").pack(side="left")
         self.port_combo = ttk.Combobox(conn, textvariable=self.port_var, width=35, state="readonly")
         self.port_combo.pack(side="left", padx=(6, 6))
-        ttk.Button(conn, text="Aggiorna", command=lambda: self.refresh_ports(False)).pack(side="left", padx=3)
-        self.connect_btn = ttk.Button(conn, text="Connetti", command=self.toggle_connection)
+        ttk.Button(conn, text="Refresh", command=lambda: self.refresh_ports(False)).pack(side="left", padx=3)
+        self.connect_btn = ttk.Button(conn, text="Connect", command=self.toggle_connection)
         self.connect_btn.pack(side="left", padx=3)
-        ttk.Label(conn, text="Stato:").pack(side="left", padx=(20, 5))
+        ttk.Label(conn, text="Status:").pack(side="left", padx=(20, 5))
         ttk.Label(conn, textvariable=self.connection_var).pack(side="left")
 
         ttk.Label(
             conn,
-            text=f"Archivio: {self.db.path}",
+            text=f"Archive: {self.db.path}",
         ).pack(side="right")
 
         self.notebook = ttk.Notebook(outer)
@@ -443,9 +443,9 @@ class LatencyDashboard:
         self.devices_tab = ttk.Frame(self.notebook, padding=8)
 
         self.notebook.add(self.live_tab, text="LIVE TEST")
-        self.notebook.add(self.sessions_tab, text="SESSIONI")
-        self.notebook.add(self.compare_tab, text="CONFRONTA")
-        self.notebook.add(self.devices_tab, text="DISPOSITIVI")
+        self.notebook.add(self.sessions_tab, text="SESSIONS")
+        self.notebook.add(self.compare_tab, text="COMPARE")
+        self.notebook.add(self.devices_tab, text="DEVICES")
 
         self._build_live_tab()
         self._build_sessions_tab()
@@ -462,12 +462,12 @@ class LatencyDashboard:
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
         right.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
 
-        metrics = ttk.LabelFrame(left, text=" Statistiche live ", padding=10)
+        metrics = ttk.LabelFrame(left, text=" Live statistics ", padding=10)
         metrics.pack(fill="x")
 
         top = ttk.Frame(metrics)
         top.pack(fill="x")
-        ttk.Label(top, text="ULTIMA", font=("Segoe UI", 10, "bold")).pack()
+        ttk.Label(top, text="LAST", font=("Segoe UI", 10, "bold")).pack()
         ttk.Label(top, textvariable=self.last_var, font=("Segoe UI", 34, "bold")).pack()
         ttk.Label(top, text="ms").pack()
 
@@ -477,7 +477,7 @@ class LatencyDashboard:
             grid.columnconfigure(c, weight=1)
 
         cells = [
-            ("MEDIA", self.mean_var), ("MEDIANA", self.median_var),
+            ("MEAN", self.mean_var), ("MEDIAN", self.median_var),
             ("P95", self.p95_var), ("P99", self.p99_var), ("DEV.STD", self.stdev_var),
             ("MIN", self.min_var), ("MAX", self.max_var),
             ("IQR", self.iqr_var), ("JITTER P95-P5", self.jitter_var), ("N", self.n_var),
@@ -485,21 +485,21 @@ class LatencyDashboard:
         for i, (title, var) in enumerate(cells):
             self._metric_cell(grid, i // 5, i % 5, title, var)
 
-        chart_box = ttk.LabelFrame(left, text=" Campioni della run corrente ", padding=6)
+        chart_box = ttk.LabelFrame(left, text=" Samples of the current run ", padding=6)
         chart_box.pack(fill="both", expand=True, pady=(8, 0))
         self.live_chart = tk.Canvas(chart_box, height=300, highlightthickness=0)
         self.live_chart.pack(fill="both", expand=True)
         self.live_chart.bind("<Configure>", lambda _e: self._draw_live_chart())
 
-        meta = ttk.LabelFrame(right, text=" Configurazione run ", padding=10)
+        meta = ttk.LabelFrame(right, text=" Run configuration ", padding=10)
         meta.pack(fill="x")
         meta.columnconfigure(1, weight=1)
 
-        ttk.Label(meta, text="Dispositivo").grid(row=0, column=0, sticky="w", pady=3)
+        ttk.Label(meta, text="Device").grid(row=0, column=0, sticky="w", pady=3)
         self.device_combo = ttk.Combobox(meta, textvariable=self.device_var, state="readonly")
         self.device_combo.grid(row=0, column=1, sticky="ew", padx=(8, 0), pady=3)
 
-        ttk.Label(meta, text="Nome run").grid(row=1, column=0, sticky="w", pady=3)
+        ttk.Label(meta, text="Run name").grid(row=1, column=0, sticky="w", pady=3)
         ttk.Entry(meta, textvariable=self.run_name_var).grid(row=1, column=1, sticky="ew", padx=(8, 0), pady=3)
 
         ttk.Label(meta, text="Polling rate (Hz)").grid(row=2, column=0, sticky="w", pady=3)
@@ -509,16 +509,16 @@ class LatencyDashboard:
         )
         self.poll_combo.grid(row=2, column=1, sticky="ew", padx=(8, 0), pady=3)
 
-        ttk.Label(meta, text="Connessione").grid(row=3, column=0, sticky="w", pady=3)
+        ttk.Label(meta, text="Connection").grid(row=3, column=0, sticky="w", pady=3)
         ttk.Combobox(
             meta, textvariable=self.connection_mode_var,
             values=("Wireless", "Wired", "Bluetooth", "Altro"),
         ).grid(row=3, column=1, sticky="ew", padx=(8, 0), pady=3)
 
-        ttk.Label(meta, text="Firmware mouse").grid(row=4, column=0, sticky="w", pady=3)
+        ttk.Label(meta, text="Mouse firmware").grid(row=4, column=0, sticky="w", pady=3)
         ttk.Entry(meta, textvariable=self.mouse_firmware_var).grid(row=4, column=1, sticky="ew", padx=(8, 0), pady=3)
 
-        ttk.Label(meta, text="Note").grid(row=5, column=0, sticky="nw", pady=3)
+        ttk.Label(meta, text="Notes").grid(row=5, column=0, sticky="nw", pady=3)
         self.run_notes = tk.Text(meta, height=4, wrap="word")
         self.run_notes.grid(row=5, column=1, sticky="ew", padx=(8, 0), pady=3)
 
@@ -528,9 +528,9 @@ class LatencyDashboard:
         ttk.Spinbox(opts, from_=1, to=10000, textvariable=self.target_samples_var, width=7).pack(
             side="left", padx=(5, 15)
         )
-        ttk.Checkbutton(opts, text="Reset all'ingresso", variable=self.auto_reset_var).pack(side="left")
+        ttk.Checkbutton(opts, text="Reset on entry", variable=self.auto_reset_var).pack(side="left")
 
-        control = ttk.LabelFrame(right, text=" Controlli ", padding=10)
+        control = ttk.LabelFrame(right, text=" Controls ", padding=10)
         control.pack(fill="x", pady=(8, 0))
 
         info = ttk.Frame(control)
@@ -546,42 +546,42 @@ class LatencyDashboard:
         buttons.columnconfigure(0, weight=1)
         buttons.columnconfigure(1, weight=1)
 
-        self.cal_btn = ttk.Button(buttons, text="Calibra", command=self.calibrate)
+        self.cal_btn = ttk.Button(buttons, text="Calibrate", command=self.calibrate)
         self.cal_btn.grid(row=0, column=0, sticky="ew", padx=(0, 3), pady=3)
         self.reset_btn = ttk.Button(buttons, text="Reset", command=self.reset_stats)
         self.reset_btn.grid(row=0, column=1, sticky="ew", padx=(3, 0), pady=3)
 
-        ttk.Button(buttons, text="Richiedi stats", command=lambda: self.send_command("S")).grid(
+        ttk.Button(buttons, text="Request stats", command=lambda: self.send_command("S")).grid(
             row=1, column=0, sticky="ew", padx=(0, 3), pady=3
         )
-        ttk.Button(buttons, text="Leggi luce", command=lambda: self.send_command("L")).grid(
+        ttk.Button(buttons, text="Read light", command=lambda: self.send_command("L")).grid(
             row=1, column=1, sticky="ew", padx=(3, 0), pady=3
         )
 
-        self.test_btn = ttk.Button(control, text="ENTRA IN TEST MODE", command=self.enter_test_mode)
+        self.test_btn = ttk.Button(control, text="ENTER TEST MODE", command=self.enter_test_mode)
         self.test_btn.pack(fill="x", pady=(10, 4), ipady=9)
 
         ttk.Label(
             control,
-            text="VERDE = premi • ROSSO = attendi/rilascia • BLU = target completato\n"
-                 "In Test Mode l'OLED rimane congelato per non disturbare il timing.",
+            text="GREEN = press • RED = wait/release • BLUE = target complete\n"
+                 "In Test Mode the OLED stays frozen so it does not disturb the timing.",
             justify="center",
         ).pack(fill="x")
 
-        session = ttk.LabelFrame(right, text=" Run corrente ", padding=10)
+        session = ttk.LabelFrame(right, text=" Current run ", padding=10)
         session.pack(fill="x", pady=(8, 0))
         row = ttk.Frame(session)
         row.pack(fill="x")
         row.columnconfigure(0, weight=1)
         row.columnconfigure(1, weight=1)
-        self.save_run_btn = ttk.Button(row, text="Salva sessione", command=self.save_current_run)
+        self.save_run_btn = ttk.Button(row, text="Save session", command=self.save_current_run)
         self.save_run_btn.grid(row=0, column=0, sticky="ew", padx=(0, 3))
-        ttk.Button(row, text="Nuova run", command=self.new_run).grid(row=0, column=1, sticky="ew", padx=(3, 0))
-        ttk.Button(session, text="Esporta run corrente CSV", command=self.export_current_csv).pack(
+        ttk.Button(row, text="New run", command=self.new_run).grid(row=0, column=1, sticky="ew", padx=(3, 0))
+        ttk.Button(session, text="Export current run to CSV", command=self.export_current_csv).pack(
             fill="x", pady=(6, 0)
         )
 
-        log_box = ttk.LabelFrame(right, text=" Eventi ", padding=6)
+        log_box = ttk.LabelFrame(right, text=" Events ", padding=6)
         log_box.pack(fill="both", expand=True, pady=(8, 0))
         self.log = tk.Text(log_box, height=10, wrap="word", state="disabled", font=("Consolas", 9))
         self.log.pack(fill="both", expand=True)
@@ -591,10 +591,10 @@ class LatencyDashboard:
     def _build_sessions_tab(self):
         top = ttk.Frame(self.sessions_tab)
         top.pack(fill="x")
-        ttk.Button(top, text="Aggiorna", command=self.refresh_sessions).pack(side="left")
-        ttk.Button(top, text="Esporta CSV", command=self.export_selected_session_csv).pack(side="left", padx=5)
-        ttk.Button(top, text="Elimina", command=self.delete_selected_session).pack(side="left", padx=5)
-        ttk.Button(top, text="Confronta selezionate", command=self.compare_selected_from_sessions).pack(
+        ttk.Button(top, text="Refresh", command=self.refresh_sessions).pack(side="left")
+        ttk.Button(top, text="Export CSV", command=self.export_selected_session_csv).pack(side="left", padx=5)
+        ttk.Button(top, text="Delete", command=self.delete_selected_session).pack(side="left", padx=5)
+        ttk.Button(top, text="Compare selected", command=self.compare_selected_from_sessions).pack(
             side="left", padx=5
         )
 
@@ -606,10 +606,10 @@ class LatencyDashboard:
             self.sessions_tab, columns=columns, show="headings", selectmode="extended"
         )
         headings = {
-            "date": "Data", "device": "Dispositivo", "run": "Run",
+            "date": "Date", "device": "Device", "run": "Run",
             "poll": "Hz", "mode": "Modo", "n": "N",
-            "median": "Mediana", "mean": "Media", "p95": "P95",
-            "p99": "P99", "stdev": "Dev.Std", "cal": "Cal µs",
+            "median": "Median", "mean": "Mean", "p95": "P95",
+            "p99": "P99", "stdev": "Std dev", "cal": "Cal µs",
         }
         widths = {
             "date": 145, "device": 170, "run": 180, "poll": 60, "mode": 90, "n": 55,
@@ -621,7 +621,7 @@ class LatencyDashboard:
         self.sessions_tree.pack(fill="both", expand=True, pady=(8, 0))
         self.sessions_tree.bind("<<TreeviewSelect>>", lambda _e: self._show_session_details())
 
-        details = ttk.LabelFrame(self.sessions_tab, text=" Dettagli ", padding=8)
+        details = ttk.LabelFrame(self.sessions_tab, text=" Details ", padding=8)
         details.pack(fill="x", pady=(8, 0))
         self.session_details = tk.Text(details, height=6, wrap="word", state="disabled")
         self.session_details.pack(fill="x")
@@ -636,11 +636,11 @@ class LatencyDashboard:
         left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
         right.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
 
-        ttk.Label(left, text="Seleziona sessioni (Ctrl/Shift per più righe):").pack(anchor="w")
+        ttk.Label(left, text="Select sessions (Ctrl/Shift for multiple rows):").pack(anchor="w")
         columns = ("date", "device", "run", "poll", "n", "median")
         self.compare_tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="extended", height=20)
         for col, title, width in [
-            ("date", "Data", 120), ("device", "Mouse", 130), ("run", "Run", 140),
+            ("date", "Date", 120), ("device", "Mouse", 130), ("run", "Run", 140),
             ("poll", "Hz", 55), ("n", "N", 45), ("median", "Med.", 65),
         ]:
             self.compare_tree.heading(col, text=title)
@@ -649,12 +649,12 @@ class LatencyDashboard:
 
         controls = ttk.Frame(left)
         controls.pack(fill="x")
-        ttk.Label(controls, text="Grafico:").pack(side="left")
+        ttk.Label(controls, text="Chart:").pack(side="left")
         ttk.Combobox(
             controls,
             textvariable=self.compare_chart_type,
             state="readonly",
-            values=("Campioni", "Box plot", "ECDF", "Istogramma"),
+            values=("Samples", "Box plot", "ECDF", "Histogram"),
             width=15,
         ).pack(side="left", padx=5)
         ttk.Button(controls, text="Plot", command=self.plot_compare).pack(side="left")
@@ -663,7 +663,7 @@ class LatencyDashboard:
             fill="x", pady=(8, 0)
         )
 
-        chart_frame = ttk.LabelFrame(right, text=" Grafico comparativo ", padding=4)
+        chart_frame = ttk.LabelFrame(right, text=" Comparison chart ", padding=4)
         chart_frame.pack(fill="both", expand=True)
 
         if MATPLOTLIB_AVAILABLE:
@@ -677,17 +677,17 @@ class LatencyDashboard:
             self.compare_canvas = None
             ttk.Label(
                 chart_frame,
-                text="Matplotlib non installato.\nEsegui: pip install matplotlib",
+                text="Matplotlib is not installed.\nRun: pip install matplotlib",
                 justify="center",
             ).pack(expand=True)
 
-        table_frame = ttk.LabelFrame(right, text=" Statistiche selezionate ", padding=4)
+        table_frame = ttk.LabelFrame(right, text=" Selected statistics ", padding=4)
         table_frame.pack(fill="x", pady=(8, 0))
         cols = ("session", "n", "mean", "median", "p95", "p99", "stdev", "min", "max", "jitter")
         self.compare_stats_tree = ttk.Treeview(table_frame, columns=cols, show="headings", height=7)
         names = {
-            "session": "Sessione", "n": "N", "mean": "Media", "median": "Mediana",
-            "p95": "P95", "p99": "P99", "stdev": "Dev.Std",
+            "session": "Session", "n": "N", "mean": "Mean", "median": "Median",
+            "p95": "P95", "p99": "P99", "stdev": "Std dev",
             "min": "Min", "max": "Max", "jitter": "Jitter",
         }
         for col in cols:
@@ -709,33 +709,33 @@ class LatencyDashboard:
             left, columns=("name", "manufacturer", "model"), show="headings", selectmode="browse"
         )
         for col, title, width in [
-            ("name", "Nome profilo", 180),
-            ("manufacturer", "Produttore", 120),
-            ("model", "Modello", 150),
+            ("name", "Profile name", 180),
+            ("manufacturer", "Manufacturer", 120),
+            ("model", "Model", 150),
         ]:
             self.devices_tree.heading(col, text=title)
             self.devices_tree.column(col, width=width)
         self.devices_tree.pack(fill="both", expand=True)
         self.devices_tree.bind("<<TreeviewSelect>>", lambda _e: self._load_selected_device())
 
-        editor = ttk.LabelFrame(right, text=" Profilo dispositivo ", padding=10)
+        editor = ttk.LabelFrame(right, text=" Device profile ", padding=10)
         editor.pack(fill="x")
         editor.columnconfigure(1, weight=1)
 
-        ttk.Label(editor, text="Nome profilo").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Label(editor, text="Profile name").grid(row=0, column=0, sticky="w", pady=4)
         ttk.Entry(editor, textvariable=self.dev_name_var).grid(row=0, column=1, sticky="ew", padx=(8, 0), pady=4)
 
-        ttk.Label(editor, text="Produttore").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Label(editor, text="Manufacturer").grid(row=1, column=0, sticky="w", pady=4)
         ttk.Entry(editor, textvariable=self.dev_manufacturer_var).grid(
             row=1, column=1, sticky="ew", padx=(8, 0), pady=4
         )
 
-        ttk.Label(editor, text="Modello").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(editor, text="Model").grid(row=2, column=0, sticky="w", pady=4)
         ttk.Entry(editor, textvariable=self.dev_model_var).grid(
             row=2, column=1, sticky="ew", padx=(8, 0), pady=4
         )
 
-        ttk.Label(editor, text="Note").grid(row=3, column=0, sticky="nw", pady=4)
+        ttk.Label(editor, text="Notes").grid(row=3, column=0, sticky="nw", pady=4)
         self.dev_notes = tk.Text(editor, height=7, wrap="word")
         self.dev_notes.grid(row=3, column=1, sticky="ew", padx=(8, 0), pady=4)
 
@@ -743,21 +743,21 @@ class LatencyDashboard:
         buttons.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         for c in range(3):
             buttons.columnconfigure(c, weight=1)
-        ttk.Button(buttons, text="Nuovo", command=self.clear_device_editor).grid(
+        ttk.Button(buttons, text="New", command=self.clear_device_editor).grid(
             row=0, column=0, sticky="ew", padx=(0, 3)
         )
-        ttk.Button(buttons, text="Salva / aggiorna", command=self.save_device).grid(
+        ttk.Button(buttons, text="Save / update", command=self.save_device).grid(
             row=0, column=1, sticky="ew", padx=3
         )
-        ttk.Button(buttons, text="Elimina", command=self.delete_device).grid(
+        ttk.Button(buttons, text="Delete", command=self.delete_device).grid(
             row=0, column=2, sticky="ew", padx=(3, 0)
         )
 
         ttk.Label(
             right,
-            text="Ogni run viene collegata a un profilo dispositivo. "
-                 "Puoi quindi salvare più configurazioni dello stesso mouse "
-                 "(es. 1000/2000/4000/8000 Hz, wired/wireless) e confrontarle in seguito.",
+            text="Each run is linked to a device profile. "
+                 "You can therefore save several configurations of the same mouse "
+                 "(e.g. 1000/2000/4000/8000 Hz, wired/wireless) and compare them later.",
             wraplength=600,
             justify="left",
         ).pack(fill="x", pady=(12, 0))
@@ -794,7 +794,7 @@ class LatencyDashboard:
     def refresh_devices(self):
         devices = self.db.list_devices()
         if not devices:
-            self.db.create_device("Mouse non nominato", "", "", "")
+            self.db.create_device("Unnamed mouse", "", "", "")
             devices = self.db.list_devices()
         current = self.device_var.get()
 
@@ -838,7 +838,7 @@ class LatencyDashboard:
     def save_device(self):
         name = self.dev_name_var.get().strip()
         if not name:
-            messagebox.showwarning("Dispositivo", "Inserisci un nome profilo.")
+            messagebox.showwarning("Device", "Enter a profile name.")
             return
         manufacturer = self.dev_manufacturer_var.get().strip()
         model = self.dev_model_var.get().strip()
@@ -850,11 +850,11 @@ class LatencyDashboard:
             else:
                 self.db.create_device(name, manufacturer, model, notes)
         except sqlite3.IntegrityError:
-            messagebox.showerror("Dispositivo", "Esiste già un profilo con questo nome.")
+            messagebox.showerror("Device", "A profile with this name already exists.")
             return
         self.refresh_devices()
         self.refresh_sessions()
-        messagebox.showinfo("Dispositivo", "Profilo salvato.")
+        messagebox.showinfo("Device", "Profile saved.")
 
     def delete_device(self):
         sel = self.devices_tree.selection()
@@ -864,8 +864,8 @@ class LatencyDashboard:
         if not row:
             return
         if not messagebox.askyesno(
-            "Elimina dispositivo",
-            f"Eliminare '{row['name']}'?\n\nSaranno eliminate anche tutte le sessioni associate.",
+            "Delete device",
+            f"Delete '{row['name']}'?\n\nAll associated sessions will be deleted too.",
         ):
             return
         self.db.delete_device(int(sel[0]))
@@ -911,15 +911,15 @@ class LatencyDashboard:
             return
         device = self._selected_device_port()
         if not device:
-            messagebox.showwarning("Connessione", "Nessuna porta seriale selezionata.")
+            messagebox.showwarning("Connection", "No serial port selected.")
             return
         try:
             self.ser = serial.Serial(device, BAUD_RATE, timeout=0.10)
             self.connected = True
-            self.connection_var.set(f"CONNESSO — {device}")
-            self.connect_btn.configure(text="Disconnetti")
+            self.connection_var.set(f"CONNECTED — {device}")
+            self.connect_btn.configure(text="Disconnect")
             self._set_controls_state()
-            self.log_line(f"Connesso a {device}")
+            self.log_line(f"Connected to {device}")
             self.serial_thread = threading.Thread(target=self._serial_loop, daemon=True)
             self.serial_thread.start()
             self.root.after(500, lambda: self.send_command("V"))
@@ -927,15 +927,15 @@ class LatencyDashboard:
             self.root.after(1000, lambda: self.send_command("L"))
         except serial.SerialException as exc:
             messagebox.showerror(
-                "Impossibile aprire la Teensy",
-                f"{exc}\n\nChiudi Arduino Serial Monitor e le vecchie dashboard/companion e riprova.",
+                "Cannot open the Teensy",
+                f"{exc}\n\nClose the Arduino Serial Monitor and the old dashboards/companion, then try again.",
             )
 
     def disconnect(self):
         self.connected = False
         self.calibrating = False
-        self.connection_var.set("DISCONNESSO")
-        self.connect_btn.configure(text="Connetti")
+        self.connection_var.set("DISCONNECTED")
+        self.connect_btn.configure(text="Connect")
         self._set_controls_state()
         ser = self.ser
         self.ser = None
@@ -1047,7 +1047,7 @@ class LatencyDashboard:
         elif line.startswith("CALIBRATING"):
             self.events.put(("state", "CALIBRATING"))
         elif line.startswith("PC_SYNCED"):
-            self.events.put(("log", "Calibrazione sincronizzata"))
+            self.events.put(("log", "Calibration synchronised"))
         else:
             self.events.put(("log", line))
 
@@ -1082,7 +1082,7 @@ class LatencyDashboard:
             return
         self.calibrating = True
         self.state_var.set("CALIBRATING")
-        self.log_line("Avvio calibrazione…")
+        self.log_line("Starting calibration…")
         if self.send_command("C"):
             self.root.after(800, self._send_calibration_ready)
         else:
@@ -1164,7 +1164,7 @@ class LatencyDashboard:
 
         self.overlay_hint_label = tk.Label(
             frame,
-            text="ATTENDI — preparazione",
+            text="WAIT — preparing",
             font=("Segoe UI", 17, "bold"),
             justify="center",
             name="hint",
@@ -1172,7 +1172,7 @@ class LatencyDashboard:
         self.overlay_hint_label.pack(pady=(8, 0))
 
         self.overlay_state_label = tk.Label(
-            frame, text="PREPARAZIONE", font=("Segoe UI", 22, "bold"), name="state"
+            frame, text="PREPARING", font=("Segoe UI", 22, "bold"), name="state"
         )
         self.overlay_state_label.pack(pady=(35, 4))
 
@@ -1200,7 +1200,7 @@ class LatencyDashboard:
         )
         self.overlay_n_label.pack(side="left", padx=25)
 
-        tk.Label(frame, text="ESC per uscire", font=("Segoe UI", 11), name="esc").pack(pady=8)
+        tk.Label(frame, text="ESC to exit", font=("Segoe UI", 11), name="esc").pack(pady=8)
 
         self._set_overlay_mode("wait")
         win.focus_force()
@@ -1210,16 +1210,16 @@ class LatencyDashboard:
             return
         if mode == "armed":
             bg = "#14532d"
-            state = "PRONTO — PREMI"
-            hint = "VERDE = puoi premere\nUn click alla volta"
+            state = "READY — PRESS"
+            hint = "GREEN = you can press\nOne click at a time"
         elif mode == "complete":
             bg = "#1e3a8a"
-            state = "TEST COMPLETATO"
-            hint = "Target raggiunto\nESC per tornare e salvare la sessione"
+            state = "TEST COMPLETE"
+            hint = "Target reached\nESC to return and save the session"
         else:
             bg = "#7f1d1d"
-            state = "ATTENDI"
-            hint = "ROSSO = non premere\nRilascia il tasto e attendi il verde"
+            state = "WAIT"
+            hint = "RED = do not press\nRelease the button and wait for green"
 
         self.overlay_frame.configure(bg=bg)
 
@@ -1273,8 +1273,8 @@ class LatencyDashboard:
             return
         if self.current_samples and not self.session_saved:
             if not messagebox.askyesno(
-                "Nuova run",
-                "La run corrente contiene campioni non salvati. Scartarli e iniziare una nuova run?",
+                "New run",
+                "The current run contains unsaved samples. Discard them and start a new run?",
             ):
                 return
         if self.connected:
@@ -1299,7 +1299,7 @@ class LatencyDashboard:
         device_name = self.device_var.get().strip()
         device_id = self.device_name_to_id.get(device_name)
         if not device_id:
-            raise ValueError("Seleziona un dispositivo.")
+            raise ValueError("Select a device.")
 
         name = self.run_name_var.get().strip() or self._generate_run_name()
         self.run_name_var.set(name)
@@ -1326,25 +1326,25 @@ class LatencyDashboard:
 
     def save_current_run(self):
         if self.test_mode:
-            messagebox.showinfo("Salva sessione", "Esci prima dal Test Mode con ESC.")
+            messagebox.showinfo("Save session", "Leave Test Mode with ESC first.")
             return
         if not self.current_samples:
-            messagebox.showinfo("Salva sessione", "Non ci sono campioni da salvare.")
+            messagebox.showinfo("Save session", "There are no samples to save.")
             return
         if self.session_saved:
-            messagebox.showinfo("Salva sessione", "Questa versione della run è già stata salvata.")
+            messagebox.showinfo("Save session", "This version of the run has already been saved.")
             return
         try:
             metadata = self._current_metadata()
         except ValueError as exc:
-            messagebox.showwarning("Salva sessione", str(exc))
+            messagebox.showwarning("Save session", str(exc))
             return
 
         run_id = self.db.save_run(metadata, self.current_samples)
         self.session_saved = True
-        self.log_line(f"Sessione salvata nell'archivio (ID {run_id})")
+        self.log_line(f"Session saved to the archive (ID {run_id})")
         self.refresh_sessions()
-        messagebox.showinfo("Salva sessione", f"Sessione salvata.\nID archivio: {run_id}")
+        messagebox.showinfo("Save session", f"Session saved.\nArchive ID: {run_id}")
 
     # ------------------------------------------------------------------
     # Current stats / chart
@@ -1385,7 +1385,7 @@ class LatencyDashboard:
         h = max(c.winfo_height(), 100)
         vals = [s["latency_ms"] for s in self.current_samples[-100:]]
         if not vals:
-            c.create_text(w / 2, h / 2, text="Nessun campione", anchor="center")
+            c.create_text(w / 2, h / 2, text="No samples", anchor="center")
             return
 
         st = compute_stats(vals)
@@ -1429,7 +1429,7 @@ class LatencyDashboard:
 
     def export_current_csv(self):
         if not self.current_samples:
-            messagebox.showinfo("CSV", "Non ci sono campioni nella run corrente.")
+            messagebox.showinfo("CSV", "There are no samples in the current run.")
             return
         try:
             metadata = self._current_metadata()
@@ -1438,7 +1438,7 @@ class LatencyDashboard:
         default = f"latency_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         path = filedialog.asksaveasfilename(
             defaultextension=".csv", initialfile=default,
-            filetypes=[("CSV", "*.csv"), ("Tutti i file", "*.*")]
+            filetypes=[("CSV", "*.csv"), ("All files", "*.*")]
         )
         if not path:
             return
@@ -1474,7 +1474,7 @@ class LatencyDashboard:
                     "light_end": metadata.get("light_end", "") if metadata else "",
                     "notes": metadata.get("notes", "") if metadata else "",
                 })
-        self.log_line(f"CSV esportato: {path}")
+        self.log_line(f"CSV exported: {path}")
 
     def refresh_sessions(self):
         runs = self.db.list_runs()
@@ -1512,15 +1512,15 @@ class LatencyDashboard:
         samples = self.db.get_samples(int(sel[0]))
         st = compute_stats([s["latency_ms"] for s in samples])
         text = (
-            f"Dispositivo: {run['device_name']}\n"
+            f"Device: {run['device_name']}\n"
             f"Run: {run['name']} | Polling: {run['polling_rate_hz'] or '—'} Hz | "
-            f"Connessione: {run['connection_mode'] or '—'} | Firmware mouse: {run['mouse_firmware'] or '—'}\n"
-            f"N={st['n']}  Media={fmt_ms(st['mean'])} ms  Mediana={fmt_ms(st['median'])} ms  "
+            f"Connection: {run['connection_mode'] or '—'} | Mouse firmware: {run['mouse_firmware'] or '—'}\n"
+            f"N={st['n']}  Mean={fmt_ms(st['mean'])} ms  Median={fmt_ms(st['median'])} ms  "
             f"P95={fmt_ms(st['p95'])} ms  P99={fmt_ms(st['p99'])} ms  "
-            f"Dev.Std={fmt_ms(st['stdev'])} ms  IQR={fmt_ms(st['iqr'])} ms  "
+            f"Std dev={fmt_ms(st['stdev'])} ms  IQR={fmt_ms(st['iqr'])} ms  "
             f"Jitter={fmt_ms(st['jitter'])} ms\n"
-            f"Calibrazione={run['calibration_us']} µs | Luce start={run['light_start']} | Luce end={run['light_end']}\n"
-            f"Note: {run['notes'] or '—'}"
+            f"Calibration={run['calibration_us']} µs | Light start={run['light_start']} | Light end={run['light_end']}\n"
+            f"Notes: {run['notes'] or '—'}"
         )
         self.session_details.configure(state="normal")
         self.session_details.delete("1.0", "end")
@@ -1531,7 +1531,7 @@ class LatencyDashboard:
         sel = self.sessions_tree.selection()
         if not sel:
             return
-        if not messagebox.askyesno("Elimina sessione", f"Eliminare {len(sel)} sessione/i selezionata/e?"):
+        if not messagebox.askyesno("Delete session", f"Delete {len(sel)} selected session(s)?"):
             return
         for iid in sel:
             self.db.delete_run(int(iid))
@@ -1540,7 +1540,7 @@ class LatencyDashboard:
     def export_selected_session_csv(self):
         sel = self.sessions_tree.selection()
         if len(sel) != 1:
-            messagebox.showinfo("CSV", "Seleziona una sola sessione.")
+            messagebox.showinfo("CSV", "Select a single session.")
             return
         run_id = int(sel[0])
         run = self.db.get_run(run_id)
@@ -1548,7 +1548,7 @@ class LatencyDashboard:
         default = f"{run['device_name']}_{run['name']}.csv".replace(" ", "_").replace("/", "-")
         path = filedialog.asksaveasfilename(
             defaultextension=".csv", initialfile=default,
-            filetypes=[("CSV", "*.csv"), ("Tutti i file", "*.*")]
+            filetypes=[("CSV", "*.csv"), ("All files", "*.*")]
         )
         if not path:
             return
@@ -1577,7 +1577,7 @@ class LatencyDashboard:
     def plot_compare(self):
         selected = self.compare_tree.selection()
         if not selected:
-            self.compare_status_var.set("Seleziona almeno una sessione.")
+            self.compare_status_var.set("Select at least one session.")
             return
 
         series = []
@@ -1594,7 +1594,7 @@ class LatencyDashboard:
             series.append((run, label, vals, compute_stats(vals)))
 
         if not series:
-            self.compare_status_var.set("Le sessioni selezionate non contengono campioni.")
+            self.compare_status_var.set("The selected sessions contain no samples.")
             return
 
         for item in self.compare_stats_tree.get_children():
@@ -1611,28 +1611,28 @@ class LatencyDashboard:
             )
 
         if not MATPLOTLIB_AVAILABLE:
-            self.compare_status_var.set("Statistiche aggiornate. Installa matplotlib per i grafici.")
+            self.compare_status_var.set("Statistics updated. Install matplotlib for charts.")
             return
 
         ax = self.compare_ax
         ax.clear()
         chart_type = self.compare_chart_type.get()
 
-        if chart_type == "Campioni":
+        if chart_type == "Samples":
             styles = ["-", "--", "-.", ":"]
             for i, (_run, label, vals, _st) in enumerate(series):
                 xs = list(range(1, len(vals) + 1))
                 ax.plot(xs, vals, linestyle=styles[i % len(styles)], marker=".", label=label)
-            ax.set_xlabel("Campione")
+            ax.set_xlabel("Sample")
             ax.set_ylabel("Latenza (ms)")
-            ax.set_title("Campioni grezzi")
+            ax.set_title("Raw samples")
 
         elif chart_type == "Box plot":
             ax.boxplot([vals for _run, _label, vals, _st in series],
                        tick_labels=[label for _run, label, _vals, _st in series],
                        showmeans=True)
             ax.set_ylabel("Latenza (ms)")
-            ax.set_title("Distribuzione — box plot")
+            ax.set_title("Distribution — box plot")
             ax.tick_params(axis="x", labelrotation=20)
 
         elif chart_type == "ECDF":
@@ -1644,12 +1644,12 @@ class LatencyDashboard:
             ax.set_ylabel("Quota campioni ≤ x")
             ax.set_title("ECDF")
 
-        elif chart_type == "Istogramma":
+        elif chart_type == "Histogram":
             for _run, label, vals, _st in series:
                 ax.hist(vals, bins="auto", histtype="step", linewidth=1.5, label=label)
             ax.set_xlabel("Latenza (ms)")
             ax.set_ylabel("Conteggio")
-            ax.set_title("Istogramma")
+            ax.set_title("Histogram")
 
         ax.grid(True, alpha=0.25)
         if chart_type != "Box plot":
@@ -1671,7 +1671,7 @@ class LatencyDashboard:
                 "Riferimento: " + base[1] + "\n" + "\n".join(comparisons)
             )
         else:
-            self.compare_status_var.set("Una sessione selezionata.")
+            self.compare_status_var.set("One session selected.")
 
     # ------------------------------------------------------------------
     # Event processing
@@ -1708,7 +1708,7 @@ class LatencyDashboard:
                 self.cal_var.set(f"{payload['calib']} µs")
                 self.state_var.set("READY")
                 self.log_line(
-                    f"Calibrazione OK: {payload['calib']} µs "
+                    f"Calibration OK: {payload['calib']} µs "
                     f"({payload['samples']} campioni, RT medio {payload['avg_rt']} µs)"
                 )
 
@@ -1728,14 +1728,14 @@ class LatencyDashboard:
             elif kind == "reset":
                 self._clear_current_samples()
                 self.state_var.set("READY")
-                self.log_line("Statistiche azzerate")
+                self.log_line("Statistics reset")
 
             elif kind == "skip":
                 try:
                     self.skipped_var.set(str(int(self.skipped_var.get()) + 1))
                 except ValueError:
                     self.skipped_var.set("1")
-                self.log_line("Campione scartato: click durante refresh OLED")
+                self.log_line("Sample discarded: click during OLED refresh")
                 if self.test_mode and not self.test_complete:
                     self._set_overlay_mode("wait")
 
@@ -1751,14 +1751,14 @@ class LatencyDashboard:
 
             elif kind == "testmode_on":
                 self.state_var.set("TEST MODE")
-                self.log_line("Test Mode: OLED congelato")
+                self.log_line("Test Mode: OLED frozen")
 
             elif kind == "testmode_off":
                 self.state_var.set("READY")
-                self.log_line("Test Mode terminato: OLED riattivato")
+                self.log_line("Test Mode ended: OLED resumed")
 
             elif kind == "abort":
-                self.log_line("Pressione annullata: nessun nuovo click OS")
+                self.log_line("Press cancelled: no new OS click")
 
             elif kind == "drop":
                 self.log_line(payload)
@@ -1775,7 +1775,7 @@ class LatencyDashboard:
                 self.log_line(payload)
 
             elif kind == "serial_error":
-                self.log_line("Errore seriale: " + payload)
+                self.log_line("Serial error: " + payload)
                 self.disconnect()
 
             self._refresh_overlay()
@@ -1812,7 +1812,7 @@ class LatencyDashboard:
         if self.current_samples and not self.session_saved:
             if not messagebox.askyesno(
                 "Chiudi",
-                "La run corrente contiene campioni non salvati.\nChiudere comunque?",
+                "The current run contains unsaved samples.\nClose anyway?",
             ):
                 return
         self.running = False
