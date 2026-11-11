@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "schematic_to_board_unique_pins": 88,
+  "explicit_datasheet_pin_checks": 38,
+  "off_45_degree_segments": 0,
+  "decoupler_distance_mm": {
+    "U1": 2.825,
+    "U2": 2.825
+  },
+  "minimum_track_mm": 0.2,
+  "board_nominal_mm": [
+    56,
+    48,
+    1.6
+  ],
+  "layers": 2,
+  "mounting_holes_np_through": {
+    "H3": [
+      3,
+      45
+    ],
+    "H1": [
+      3,
+      3
+    ],
+    "H4": [
+      53,
+      45
+    ],
+    "H2": [
+      53,
+      3
+    ]
+  },
+  "physical_test": "NOT PERFORMED",
+  "timing_accuracy": "NOT CHARACTERIZED"
+}

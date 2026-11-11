@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "target": "KiCad 9.0",
+  "matching_pad_records": 92,
+  "matching_track_records": 122,
+  "matching_schematic_pin_records": 90,
+  "downgrade_report": "kicad9-export.json: no dropped or approximated items",
+  "portable_erc": "clean",
+  "portable_drc": "0 violations, 0 unconnected, 0 parity errors"
+}

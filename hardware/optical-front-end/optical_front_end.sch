@@ -1,0 +1,455 @@
+EESchema Schematic File Version 4
+LIBS:mlt
+EELAYER 29 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "MouseLatencyTester - optical front-end"
+Date "2026-11-08"
+Rev "DRAFT A - electrical review"
+Comp "PrimeBuild"
+Comment1 "BPV10 + OPA380 + TLV3501 / Teensy 2.0, 5 V only"
+Comment2 "Prototype: not physically tested; footprints/BOM pending"
+$EndDescr
+Text Notes 1300 900 0 55 ~ 0
+1. BIAS (nominal 2.5 V)
+$Comp
+L mlt:R R1
+U 1 1 A791366F
+P 1600 1500
+F 0 "R1" H 1780 1570 45 0000 L CNN
+F 1 "10k 1%" H 1780 1470 45 0000 L CNN
+F 2 "" H 1600 1500 40 0001 C CNN
+	1    1600 1500
+	1 0 0 -1
+$EndComp
+$Comp
+L mlt:R R2
+U 1 1 D653B016
+P 1600 2300
+F 0 "R2" H 1780 2370 45 0000 L CNN
+F 1 "10k 1%" H 1780 2270 45 0000 L CNN
+F 2 "" H 1600 2300 40 0001 C CNN
+	1    1600 2300
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	1600 1350 1600 1150
+Text Label 1600 1150 1 40 ~ 0
++5V
+Wire Wire Line
+	1600 1650 1600 2150
+Wire Wire Line
+	1600 1900 1900 1900
+Text Label 1900 1900 0 40 ~ 0
+VBIAS
+Connection ~ 1600 1900
+Wire Wire Line
+	1600 2450 1600 2650
+Text Label 1600 2650 1 40 ~ 0
+GND
+$Comp
+L mlt:C C1
+U 1 1 AB861DC1
+P 2500 2000
+F 0 "C1" H 2680 2070 45 0000 L CNN
+F 1 "100nF" H 2680 1970 45 0000 L CNN
+F 2 "" H 2500 2000 40 0001 C CNN
+	1    2500 2000
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	2500 1850 2500 1650
+Text Label 2500 1650 1 40 ~ 0
+VBIAS
+Wire Wire Line
+	2500 2150 2500 2350
+Text Label 2500 2350 1 40 ~ 0
+GND
+$Comp
+L mlt:C C2
+U 1 1 9685EB76
+P 3500 2000
+F 0 "C2" H 3680 2070 45 0000 L CNN
+F 1 "10uF [package TBD]" H 3680 1970 45 0000 L CNN
+F 2 "" H 3500 2000 40 0001 C CNN
+	1    3500 2000
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	3500 1850 3500 1650
+Text Label 3500 1650 1 40 ~ 0
+VBIAS
+Wire Wire Line
+	3500 2150 3500 2350
+Text Label 3500 2350 1 40 ~ 0
+GND
+Text Notes 1300 3100 0 55 ~ 0
+2. PHOTODIODE / TRANSIMPEDANCE
+$Comp
+L mlt:D_Photo D1
+U 1 1 33A123E5
+P 2400 4000
+F 0 "D1" H 2580 4070 45 0000 L CNN
+F 1 "BPV10" H 2580 3970 45 0000 L CNN
+F 2 "" H 2400 4000 40 0001 C CNN
+	1    2400 4000
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	2200 4000 1900 4000
+Text Label 1900 4000 2 40 ~ 0
+SUM
+Wire Wire Line
+	2500 4000 2800 4000
+Text Label 2800 4000 0 40 ~ 0
+GND
+Text Notes 1700 4500 0 45 ~ 0
+K -> SUM; A -> GND
+$Comp
+L mlt:OPA380 U1
+U 1 1 316CA0EF
+P 4400 4000
+F 0 "U1" H 4580 4070 45 0000 L CNN
+F 1 "OPA380AIDR" H 4580 3970 45 0000 L CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm_HandSolder" H 4400 4000 40 0001 C CNN
+	1    4400 4000
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	4050 3900 3900 3900
+Text Label 3900 3900 2 40 ~ 0
+VBIAS
+Wire Wire Line
+	4050 4100 3750 4100
+Text Label 3750 4100 2 40 ~ 0
+SUM
+Wire Wire Line
+	4400 3600 4400 3450
+Text Label 4400 3450 1 40 ~ 0
++5V
+Wire Wire Line
+	4400 4400 4400 4550
+Text Label 4400 4550 1 40 ~ 0
+GND
+NoConn ~ 4500 3600
+NoConn ~ 4600 3600
+NoConn ~ 4700 3600
+$Comp
+L mlt:R R3
+U 1 1 021BBD75
+P 4400 3000
+F 0 "R3" H 4580 3070 45 0000 L CNN
+F 1 "10k 1%" H 4580 2970 45 0000 L CNN
+F 2 "" H 4400 3000 40 0001 C CNN
+	1    4400 3000
+	0 -1 -1 0
+$EndComp
+$Comp
+L mlt:C C3
+U 1 1 8A214CEF
+P 4400 3300
+F 0 "C3" H 4580 3370 45 0000 L CNN
+F 1 "15pF NP0 0805" H 4580 3270 45 0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 4400 3300 40 0001 C CNN
+	1    4400 3300
+	0 -1 -1 0
+$EndComp
+Wire Wire Line
+	3750 4100 3750 3000
+Wire Wire Line
+	3750 3000 4250 3000
+Wire Wire Line
+	3750 3300 4250 3300
+Connection ~ 3750 3300
+Wire Wire Line
+	4550 3000 5250 3000
+Wire Wire Line
+	4550 3300 5250 3300
+Wire Wire Line
+	5250 3000 5250 4000
+Connection ~ 5250 3300
+Wire Wire Line
+	4800 4000 5250 4000
+Wire Wire Line
+	5250 4000 5500 4000
+Text Label 5500 4000 0 40 ~ 0
+TIA_OUT
+Connection ~ 5250 4000
+Text Notes 6100 900 0 55 ~ 0
+3. THRESHOLD / HYSTERESIS / DIGITAL OUTPUT
+$Comp
+L mlt:R_Potentiometer RV1
+U 1 1 3B920B67
+P 6700 1800
+F 0 "RV1" H 6880 1870 45 0000 L CNN
+F 1 "3296W 10k" H 6880 1770 45 0000 L CNN
+F 2 "" H 6700 1800 40 0001 C CNN
+	1    6700 1800
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	6700 1650 6700 1450
+Text Label 6700 1450 1 40 ~ 0
++5V
+Wire Wire Line
+	6700 1950 6700 2150
+Text Label 6700 2150 1 40 ~ 0
+GND
+Wire Wire Line
+	6850 1800 7150 1800
+Text Label 7150 1800 0 40 ~ 0
+THRESH
+$Comp
+L mlt:R R4
+U 1 1 EC7E008B
+P 8000 1800
+F 0 "R4" H 8180 1870 45 0000 L CNN
+F 1 "1M 1%" H 8180 1770 45 0000 L CNN
+F 2 "" H 8000 1800 40 0001 C CNN
+	1    8000 1800
+	0 -1 -1 0
+$EndComp
+Wire Wire Line
+	7850 1800 7700 1800
+Text Label 7700 1800 2 40 ~ 0
+THRESH
+Wire Wire Line
+	8150 1800 8300 1800
+Text Label 8300 1800 0 40 ~ 0
+CMP_RAW
+$Comp
+L mlt:TLV3501 U2
+U 1 1 325A90F3
+P 8000 3300
+F 0 "U2" H 8180 3370 45 0000 L CNN
+F 1 "TLV3501AID" H 8180 3270 45 0000 L CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm_HandSolder" H 8000 3300 40 0001 C CNN
+	1    8000 3300
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	7650 3200 7500 3200
+Text Label 7500 3200 2 40 ~ 0
+THRESH
+Wire Wire Line
+	7650 3400 7500 3400
+Text Label 7500 3400 2 40 ~ 0
+TIA_OUT
+Wire Wire Line
+	8000 2900 8000 2750
+Text Label 8000 2750 1 40 ~ 0
++5V
+Wire Wire Line
+	8000 3700 8000 3900
+Wire Wire Line
+	8100 3700 8100 3900
+Wire Wire Line
+	8000 3900 8100 3900
+Wire Wire Line
+	8000 3900 8000 4050
+Text Label 8000 4050 1 40 ~ 0
+GND
+Connection ~ 8000 3900
+NoConn ~ 8100 2900
+NoConn ~ 8200 2900
+Wire Wire Line
+	8400 3300 8650 3300
+Text Label 8500 3300 0 40 ~ 0
+CMP_RAW
+$Comp
+L mlt:R R5
+U 1 1 D9A37366
+P 8800 3300
+F 0 "R5" H 8980 3370 45 0000 L CNN
+F 1 "100R 1%" H 8980 3270 45 0000 L CNN
+F 2 "" H 8800 3300 40 0001 C CNN
+	1    8800 3300
+	0 -1 -1 0
+$EndComp
+Wire Wire Line
+	8950 3300 9200 3300
+Text Label 9200 3300 0 40 ~ 0
+OPT_TRIGGER
+Text Notes 9300 900 0 55 ~ 0
+4. 5 V INPUT / OUTPUT TO TEENSY 2.0
+$Comp
+L mlt:Conn_01x04 J1
+U 1 1 493D650D
+P 10200 1600
+F 0 "J1" H 10380 1670 45 0000 L CNN
+F 1 "TO_TEENSY_2.0" H 10380 1570 45 0000 L CNN
+F 2 "" H 10200 1600 40 0001 C CNN
+	1    10200 1600
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	10000 1500 9600 1500
+Text Label 9600 1500 2 40 ~ 0
++5V
+Wire Wire Line
+	10000 1600 9600 1600
+Text Label 9600 1600 2 40 ~ 0
+GND
+Wire Wire Line
+	10000 1700 9600 1700
+Text Label 9600 1700 2 40 ~ 0
+TIA_OUT
+Wire Wire Line
+	10000 1800 9600 1800
+Text Label 9600 1800 2 40 ~ 0
+OPT_TRIGGER
+$Comp
+L mlt:PWR_FLAG #FLG01
+U 1 1 D71FF190
+P 9700 1500
+F 0 "#FLG01" H 9880 1570 45 0001 L CNN
+F 1 "PWR_FLAG" H 9880 1470 45 0001 L CNN
+F 2 "" H 9700 1500 40 0001 C CNN
+	1    9700 1500
+	1 0 0 -1
+$EndComp
+$Comp
+L mlt:PWR_FLAG #FLG02
+U 1 1 A3475D8F
+P 9700 1600
+F 0 "#FLG02" H 9880 1670 45 0001 L CNN
+F 1 "PWR_FLAG" H 9880 1570 45 0001 L CNN
+F 2 "" H 9700 1600 40 0001 C CNN
+	1    9700 1600
+	1 0 0 -1
+$EndComp
+Connection ~ 9700 1500
+Connection ~ 9700 1600
+Text Notes 9400 2300 0 45 ~ 0
+J1.1 -> VCC (~5 V USB)
+Text Notes 9400 2450 0 45 ~ 0
+J1.2 -> GND
+Text Notes 9400 2600 0 45 ~ 0
+J1.3 -> F0 / A0 (telemetry)
+Text Notes 9400 2750 0 45 ~ 0
+J1.4 -> D3 / digital 8 (FALLING ISR)
+Text Notes 9400 3000 0 45 ~ 0
+Not compatible with 3.3 V Teensy 4.x I/O
+Text Notes 6100 4650 0 55 ~ 0
+5. LOCAL BYPASS / BULK SUPPLY
+$Comp
+L mlt:C C4
+U 1 1 08D1623C
+P 6500 5300
+F 0 "C4" H 6680 5370 45 0000 L CNN
+F 1 "100nF at U1" H 6680 5270 45 0000 L CNN
+F 2 "" H 6500 5300 40 0001 C CNN
+	1    6500 5300
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	6500 5150 6500 4950
+Text Label 6500 4950 1 40 ~ 0
++5V
+Wire Wire Line
+	6500 5450 6500 5650
+Text Label 6500 5650 1 40 ~ 0
+GND
+$Comp
+L mlt:C C5
+U 1 1 1D96682B
+P 7900 5300
+F 0 "C5" H 8080 5370 45 0000 L CNN
+F 1 "100nF at U2" H 8080 5270 45 0000 L CNN
+F 2 "" H 7900 5300 40 0001 C CNN
+	1    7900 5300
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	7900 5150 7900 4950
+Text Label 7900 4950 1 40 ~ 0
++5V
+Wire Wire Line
+	7900 5450 7900 5650
+Text Label 7900 5650 1 40 ~ 0
+GND
+$Comp
+L mlt:C C6
+U 1 1 90FCE73C
+P 9300 5300
+F 0 "C6" H 9480 5370 45 0000 L CNN
+F 1 "10uF [package TBD]" H 9480 5270 45 0000 L CNN
+F 2 "" H 9300 5300 40 0001 C CNN
+	1    9300 5300
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	9300 5150 9300 4950
+Text Label 9300 4950 1 40 ~ 0
++5V
+Wire Wire Line
+	9300 5450 9300 5650
+Text Label 9300 5650 1 40 ~ 0
+GND
+Text Notes 6100 6000 0 45 ~ 0
+Place bypass at IC pins; keep D1 / U1 / R3 / C3 loop short.
+$Comp
+L mlt:TestPoint TP1
+U 1 1 FDB84156
+P 1600 5350
+F 0 "TP1" H 1780 5420 45 0000 L CNN
+F 1 "VBIAS" H 1780 5320 45 0000 L CNN
+F 2 "" H 1600 5350 40 0001 C CNN
+	1    1600 5350
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	1600 5350 1600 5650
+Text Label 1600 5650 1 40 ~ 0
+VBIAS
+$Comp
+L mlt:TestPoint TP2
+U 1 1 D6252738
+P 2900 5350
+F 0 "TP2" H 3080 5420 45 0000 L CNN
+F 1 "TIA_OUT" H 3080 5320 45 0000 L CNN
+F 2 "" H 2900 5350 40 0001 C CNN
+	1    2900 5350
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	2900 5350 2900 5650
+Text Label 2900 5650 1 40 ~ 0
+TIA_OUT
+$Comp
+L mlt:TestPoint TP3
+U 1 1 1B3DB275
+P 4200 5350
+F 0 "TP3" H 4380 5420 45 0000 L CNN
+F 1 "CMP_RAW" H 4380 5320 45 0000 L CNN
+F 2 "" H 4200 5350 40 0001 C CNN
+	1    4200 5350
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	4200 5350 4200 5650
+Text Label 4200 5650 1 40 ~ 0
+CMP_RAW
+$Comp
+L mlt:TestPoint TP4
+U 1 1 A4F7FD7D
+P 5500 5350
+F 0 "TP4" H 5680 5420 45 0000 L CNN
+F 1 "GND" H 5680 5320 45 0000 L CNN
+F 2 "" H 5500 5350 40 0001 C CNN
+	1    5500 5350
+	1 0 0 -1
+$EndComp
+Wire Wire Line
+	5500 5350 5500 5650
+Text Label 5500 5650 1 40 ~ 0
+GND
+Text Notes 1300 6400 0 55 ~ 0
+DRAFT: electrical schematic only. No routing, case clearance or bench validation.
+Text Notes 1300 6650 0 45 ~ 0
+R/C values start from docs/optical_front_end.md. Gain and stability require measurement.
+Text Notes 1300 6850 0 45 ~ 0
+Old probe D2/pin7, OLED and buttons remain on the Teensy carrier; not drawn on this sheet.
+$EndSCHEMATC

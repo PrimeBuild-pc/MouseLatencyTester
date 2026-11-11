@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "path": "C:\\Users\\Lorenzo\\Documents\\Projects\\MouseLatencyTester\\hardware\\optical-front-end\\optical_front_end.kicad_sch",
+  "findings": [
+    {
+      "severity": "info",
+      "code": "libraries_not_checked",
+      "message": "3 symbol or footprint library check(s) not made: KiCad runs here without your global library tables (a project's own sym-lib-table and fp-lib-table are read)",
+      "location": null,
+      "hint": null
+    }
+  ],
+  "summary": "OK optical_front_end.kicad_sch: ERC clean (0 warning(s))",
+  "measurements": {}
+}

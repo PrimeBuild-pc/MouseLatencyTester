@@ -26,6 +26,7 @@ Desktop.ini
 .DS_Store
 
 # Local data — never commit measurements or user settings
+.local/
 *.db
 *.db-journal
 *.sqlite
@@ -33,6 +34,14 @@ Desktop.ini
 settings.json
 *.csv
 !docs/**/*.csv
+!hardware/**/*.csv
+!outputs/**/*.csv
+
+# KiCad per-user state and editor locks
+*.kicad_prl
+*.kicad_pcb.lck
+*.kicad_sch.lck
+~*.lck
 
 # Arduino build output
 build*/

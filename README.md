@@ -43,6 +43,14 @@ and the difference is your real input latency. Archive it, chart it, compare it.
 
 ---
 
+## Prototype A1 PCB
+
+The [compact BPV10 PCB documentation](docs/hardware/README.md) includes the KiCad design,
+schematic, fabrication files, BOM and assembly instructions. The new optical board is an
+**unbuilt prototype**: electrical/layout checks pass, but physical validation, comparator
+firmware and the enclosure are still pending. This is separate from the existing assembled
+tester described below.
+
 ## Gallery
 
 <div align="center">
@@ -688,10 +696,12 @@ latency_tester/          the dashboard, as a package
   app.py                 shell, state, event pump
   views/                 live · sessions · compare · devices · preferences · testmode
 firmware/                Arduino sketches, v1.0 → v1.5
+hardware/                compact A1 PCB, schematic, local libraries and checks
+outputs/                 checked A1 fabrication ZIPs and portable KiCad project
 packaging/               PyInstaller spec, Inno Setup script, build script
 tests/                   pytest suite
 docs/                    protocol, install, bring-up, first test, troubleshooting,
-                         and the photodiode front-end design (not built yet)
+                         photodiode design and hardware/ research (not built yet)
 legacy/                  the previous single-file dashboards, still runnable
 ```
 

@@ -1,0 +1,27 @@
+Drill report for mouse_latency_tester.kicad_pcb
+Created on 2026-11-11T16:30:39
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  B.Cu                      back
+
+
+Drill file 'mouse_latency_tester-PTH.drl' contains
+    plated through holes:
+    =============================================================
+    T1  0.300mm  0.0118"  (10 holes))
+    T2  0.600mm  0.0236"  (4 holes))
+    T3  0.800mm  0.0315"  (19 holes))
+    T4  1.000mm  0.0394"  (8 holes))
+    T5  1.100mm  0.0433"  (39 holes))
+
+    Total plated holes count 80
+
+
+Drill file 'mouse_latency_tester-NPTH.drl' contains
+    unplated through holes:
+    =============================================================
+    T1  2.200mm  0.0866"  (4 holes))
+
+    Total unplated holes count 4

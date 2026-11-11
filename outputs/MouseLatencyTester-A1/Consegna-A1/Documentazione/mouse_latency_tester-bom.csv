@@ -1,0 +1,21 @@
+Reference,Value,Footprint,Quantity,MPN
+"C1,C4,C5",100nF,mlt:C_Disc_D5.0mm_W2.5mm_P2.50mm,3,
+"C2,C6",10uF 16V,mlt:CP_Radial_D4.0mm_P1.50mm,2,ECEA1CKS100
+C3,15pF NP0,mlt:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder,1,
+D1,BPV10,mlt:LED_D5.0mm,1,BPV10
+J1,OLED connector 1x04,mlt:PinHeader_1x04_P2.54mm_Vertical,1,
+J2,PROBE connector 1x02,mlt:PinHeader_1x02_P2.54mm_Vertical,1,
+R1,10k 1%,mlt:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal,1,
+R2,10k 1%,mlt:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical,1,
+"R3,R4",1M 1%,mlt:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical,2,
+R5,100R 1%,mlt:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical,1,
+RV1,3296W 10k,mlt:Potentiometer_Bourns_3296W_Vertical,1,
+SW1,BTN1,mlt:SW_PUSH_6mm_H4.3mm,1,
+SW2,BTN2,mlt:SW_PUSH_6mm_H4.3mm,1,
+TP1,VBIAS,mlt:TestPoint_Pad_D1.5mm,1,
+TP2,TIA_OUT,mlt:TestPoint_Pad_D1.5mm,1,
+TP3,CMP_RAW,mlt:TestPoint_Pad_D1.5mm,1,
+TP4,GND,mlt:TestPoint_Pad_D1.5mm,1,
+U1,OPA380AIDR,mlt:SOIC-8_3.9x4.9mm_P1.27mm,1,OPA380AIDR
+U2,TLV3501AID,mlt:SOIC-8_3.9x4.9mm_P1.27mm,1,TLV3501AID
+U3,Teensy 2.0,mlt:Teensy2.0,1,Teensy 2.0

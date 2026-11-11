@@ -1,0 +1,175 @@
+{
+    "$schema": "https://schemas.kicad.org/drc.v1.json",
+    "coordinate_units": "mm",
+    "date": "2026-11-08T20:40:06",
+    "ignored_checks": [
+        {
+            "description": "Footprint has no courtyard defined",
+            "key": "missing_courtyard"
+        },
+        {
+            "description": "Track endpoint not centered on via",
+            "key": "track_not_centered_on_via"
+        },
+        {
+            "description": "Tuning profile track geometries",
+            "key": "tuning_profile_track_geometries"
+        },
+        {
+            "description": "Footprint doesn't match symbol's footprint filters",
+            "key": "footprint_filters_mismatch"
+        },
+        {
+            "description": "Footprint component type doesn't match footprint pads",
+            "key": "footprint_type_mismatch"
+        }
+    ],
+    "included_severities": [
+        "error",
+        "warning"
+    ],
+    "kicad_version": "10.99.0",
+    "schematic_parity": [],
+    "source": "mouse_latency_tester.kicad_pcb",
+    "unconnected_items": [],
+    "violations": [
+        {
+            "description": "PTH inside courtyard",
+            "items": [
+                {
+                    "description": "PTH pad 2 [/GND] of R2",
+                    "pos": {
+                        "x": 9.12,
+                        "y": 33.5
+                    },
+                    "uuid": "f90b3071-8872-40da-b3c2-c31f214de695"
+                },
+                {
+                    "description": "Footprint D1",
+                    "pos": {
+                        "x": 13.54,
+                        "y": 36.635
+                    },
+                    "uuid": "3283c797-5c0e-4a6a-bf89-b527194861f4"
+                }
+            ],
+            "severity": "error",
+            "type": "pth_inside_courtyard"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 2.0,
+                        "y": 0.0
+                    },
+                    "uuid": "3ce6079c-b4ac-5847-b7f7-7bbb33f78495"
+                },
+                {
+                    "description": "Reference field of H1",
+                    "pos": {
+                        "x": 3.0,
+                        "y": -0.2
+                    },
+                    "uuid": "713a47d5-6bab-43bd-8b22-ab3201c219c7"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clipped by board edge",
+            "items": [
+                {
+                    "description": "Segment on Edge.Cuts",
+                    "pos": {
+                        "x": 2.0,
+                        "y": 0.0
+                    },
+                    "uuid": "3ce6079c-b4ac-5847-b7f7-7bbb33f78495"
+                },
+                {
+                    "description": "Reference field of H2",
+                    "pos": {
+                        "x": 53.0,
+                        "y": -0.2
+                    },
+                    "uuid": "a0dbf748-9347-4e61-b030-bed3ca506da4"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_edge_clearance"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of R2",
+                    "pos": {
+                        "x": 5.3,
+                        "y": 36.0
+                    },
+                    "uuid": "1a75524f-3e77-4ef2-afa0-a709595b553b"
+                },
+                {
+                    "description": "Reference field of C2",
+                    "pos": {
+                        "x": 4.25,
+                        "y": 36.55
+                    },
+                    "uuid": "c1936611-f6d6-4f6e-80cb-fc71ee05762d"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of H3",
+                    "pos": {
+                        "x": 3.0,
+                        "y": 41.8
+                    },
+                    "uuid": "2e5f2576-568b-4595-8edf-607cdf2a1d54"
+                },
+                {
+                    "description": "Circle of C2 on F.Silkscreen",
+                    "pos": {
+                        "x": 4.25,
+                        "y": 39.8
+                    },
+                    "uuid": "b007fe06-cbac-4987-acb7-8011179a94a1"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        },
+        {
+            "description": "Silkscreen clearance",
+            "items": [
+                {
+                    "description": "Reference field of C5",
+                    "pos": {
+                        "x": 41.0,
+                        "y": 34.0
+                    },
+                    "uuid": "15c3e2cd-b49a-44ed-8dcc-716f36ab0ba8"
+                },
+                {
+                    "description": "Segment of C5 on F.Silkscreen",
+                    "pos": {
+                        "x": 40.67,
+                        "y": 33.995
+                    },
+                    "uuid": "7bd7c642-55ae-4ab3-bae9-16e09fca140c"
+                }
+            ],
+            "severity": "warning",
+            "type": "silk_overlap"
+        }
+    ]
+}

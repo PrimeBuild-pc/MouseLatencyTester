@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "engine": "Official Windows KiCad 9.0.8, installed application",
+  "target": "outputs/MouseLatencyTester-A1/Consegna-A1/KiCad",
+  "erc_violations": 0,
+  "drc_violations": 0,
+  "unconnected_items": 0,
+  "schematic_parity_issues": 0,
+  "native9_netlist_to_board_unique_pins": 88,
+  "schematic_fix": "Split three existing wires at explicit junctions; existing intended connectivity preserved",
+  "components_and_values_changed": false,
+  "pcb_and_libraries_changed": false,
+  "pcbway_zip_bytes_changed": false,
+  "physical_test": "NOT PERFORMED",
+  "firmware_optical": "NOT IMPLEMENTED"
+}

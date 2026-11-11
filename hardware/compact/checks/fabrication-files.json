@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "gerber_layers": [
+    "B_Cu.gbl",
+    "B_Mask.gbs",
+    "B_Silkscreen.gbo",
+    "Edge_Cuts.gm1",
+    "F_Cu.gtl",
+    "F_Mask.gts",
+    "F_Silkscreen.gto"
+  ],
+  "plated_holes": 80,
+  "holes_match_board": 84,
+  "outline_mm": [
+    56.05,
+    48.05
+  ],
+  "unplated_holes": [
+    [
+      3.0,
+      -45.0,
+      2.2
+    ],
+    [
+      3.0,
+      -3.0,
+      2.2
+    ],
+    [
+      53.0,
+      -45.0,
+      2.2
+    ],
+    [
+      53.0,
+      -3.0,
+      2.2
+    ]
+  ],
+  "slots": 0,
+  "renders": "Gerbonara SVG + resvg, from exported Gerber/Excellon files",
+  "physical_verification": "NOT PERFORMED"
+}

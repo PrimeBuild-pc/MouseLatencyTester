@@ -76,9 +76,14 @@ hold the node still while the photodiode current steps.
 BPV10 anode   ── GND
 BPV10 cathode ── OPA380 pin 2 (-IN)
 
-OPA380 pin 6 (OUT) ── 10k  ── OPA380 pin 2   (transimpedance gain)
+OPA380 pin 6 (OUT) ── 1M   ── OPA380 pin 2   (transimpedance gain)
 OPA380 pin 6 (OUT) ── 15pF ── OPA380 pin 2   (NP0/C0G, stability)
 ```
+
+The gain was 10 kΩ in the first draft. A display at 250 cd/m² puts about 1 µA
+through a BPV10, which is 10 mV across 10 kΩ — less than the comparator's
+hysteresis. 1 MΩ gives about 1 V; with the 15 pF the pole sits near 10 kHz.
+Estimated from the datasheet, not measured.
 
 The photodiode runs in **photoconductive** mode into a virtual earth, which is
 what keeps it fast: the junction capacitance never has to charge a load.
@@ -168,8 +173,8 @@ threshold.
 | 1 | OPA380AID / OPA380AIDR |
 | 1 | TLV3501AID / TLV3501AIDR |
 | 2 | SOIC-8 to DIP adapter boards |
-| 3 | 10 kΩ 1% resistors |
-| 1 | 1 MΩ 1% resistor |
+| 2 | 10 kΩ 1% resistors |
+| 2 | 1 MΩ 1% resistors |
 | 1 | 100 Ω 1% resistor |
 | 1 | 15 pF NP0/C0G capacitor |
 | 3 | 100 nF ceramic capacitors |
